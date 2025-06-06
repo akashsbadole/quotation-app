@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (optional - for production use)
+  postgres:
+    image: postgres:15-alpine
+    container_name: quotation_postgres
+    environment:
+      POSTGRES_DB: quotation_db
+      POSTGRES_USER: quotation_user
+      POSTGRES_PASSWORD: quotation_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - quotation_network
+
+  # pgAdmin (optional - for database management)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: quotation_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@quotation.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - quotation_network
+
+volumes:
+  postgres_data:
+
+networks:
+  quotation_network:
+    driver: bridge

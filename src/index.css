@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.desktop-icon {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.desktop-icon:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.desktop-icon.selected {
+  background-color: rgba(0, 120, 215, 0.3);
+}
+
+.desktop-icon-label {
+  color: white;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+  font-size: 12px;
+  margin-top: 4px;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskbar {
+  background-color: rgba(19, 23, 33, 0.85);
+  backdrop-filter: blur(10px);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  z-index: 1000;
+}
+
+.start-menu {
+  background-color: rgba(36, 36, 36, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+  width: 650px;
+  height: 600px;
+  position: absolute;
+  bottom: 56px;
+  left: 0;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.window {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.window-header {
+  height: 32px;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  justify-content: space-between;
+  cursor: move;
+}
+
+.window-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+}
+
+.window-control {
+  width: 12px;
+  height: 12px;
+  margin-left: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.window-minimize {
+  background-color: #ffbd44;
+}
+
+.window-maximize {
+  background-color: #00ca4e;
+}
+
+.window-close {
+  background-color: #ff605c;
+}
+
+.window-content {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+/* Modal z-index override to ensure modals appear above windows */
+[data-slot="backdrop"] {
+  z-index: 2000 !important;
+}
+
+[data-slot="wrapper"] {
+  z-index: 2001 !important;
+}
+
+/* Ensure HeroUI modals appear above everything */
+.heroui-modal-wrapper {
+  z-index: 2001 !important;
+}
+
+.heroui-modal-backdrop {
+  z-index: 2000 !important;
+}
+
+/* Windows 11 style scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}

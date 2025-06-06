@@ -1,0 +1,122 @@
+// PostgreSQL version of the schema
+// To use PostgreSQL:
+// 1. Copy this file to schema.prisma
+// 2. Update your .env file with PostgreSQL connection string
+// 3. Run: npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  contact   String
+  email     String   @unique
+  phone     String
+  address   String
+  city      String
+  state     String
+  zipCode   String
+  country   String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  quotations Quotation[]
+
+  @@map("clients")
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  type        ProductType
+  price       Float
+  unit        String
+  tax         Float       @default(0)
+  stock       Int?
+  image       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  quotationItems QuotationItem[]
+
+  @@map("products")
+}
+
+model Quotation {
+  id         String          @id @default(cuid())
+  clientId   String
+  date       DateTime
+  expiryDate DateTime
+  subtotal   Float           @default(0)
+  tax        Float           @default(0)
+  discount   Float           @default(0)
+  total      Float           @default(0)
+  notes      String?
+  terms      String?
+  status     QuotationStatus @default(DRAFT)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  // Relations
+  client Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  items  QuotationItem[]
+
+  @@map("quotations")
+}
+
+model QuotationItem {
+  id          String  @id @default(cuid())
+  quotationId String
+  productId   String
+  name        String
+  description String
+  quantity    Int
+  unitPrice   Float
+  tax         Float   @default(0)
+  discount    Float   @default(0)
+  total       Float
+
+  // Relations
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id])
+
+  @@map("quotation_items")
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  category    String
+  content     String
+  thumbnail   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("templates")
+}
+
+enum ProductType {
+  PRODUCT
+  SERVICE
+  SUBSCRIPTION
+}
+
+enum QuotationStatus {
+  DRAFT
+  PENDING
+  SENT
+  APPROVED
+  REJECTED
+}
