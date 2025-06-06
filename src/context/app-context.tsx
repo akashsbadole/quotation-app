@@ -1,5 +1,6 @@
 import React from "react";
-import { WindowType } from "../types/window";
+import { WindowType, DesktopItemType } from "../types/window";
+import { useDataContext } from "./data-context";
 
 interface AppContextType {
   wallpaper: string;
@@ -14,6 +15,10 @@ interface AppContextType {
   isStartMenuOpen: boolean;
   toggleStartMenu: () => void;
   closeStartMenu: () => void;
+  desktopItems: DesktopItemType[];
+  addDesktopItem: (item: DesktopItemType) => void;
+  removeDesktopItem: (id: string) => void;
+  updateDesktopItem: (id: string, updates: Partial<DesktopItemType>) => void;
 }
 
 export const AppContext = React.createContext<AppContextType>({
@@ -29,11 +34,18 @@ export const AppContext = React.createContext<AppContextType>({
   isStartMenuOpen: false,
   toggleStartMenu: () => {},
   closeStartMenu: () => {},
+  desktopItems: [],
+  addDesktopItem: () => {},
+  removeDesktopItem: () => {},
+  updateDesktopItem: () => {},
 });
 
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { desktopItems, addDesktopItem, updateDesktopItem, deleteDesktopItem } =
+    useDataContext();
+
   const [wallpaper, setWallpaper] = React.useState<string>(
     "https://img.heroui.chat/image/landscape?w=1920&h=1080&u=1"
   );
@@ -124,6 +136,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsStartMenuOpen(false);
   };
 
+  const removeDesktopItem = (id: string) => {
+    deleteDesktopItem(id);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -139,6 +155,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         isStartMenuOpen,
         toggleStartMenu,
         closeStartMenu,
+        desktopItems,
+        addDesktopItem,
+        removeDesktopItem,
+        updateDesktopItem,
       }}
     >
       {children}

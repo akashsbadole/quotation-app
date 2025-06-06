@@ -29,6 +29,7 @@ import {
 import { Icon } from "@iconify/react";
 import { useDataContext } from "../../context/data-context";
 import { QuotationType, QuotationItemType } from "../../types/window";
+import { CommunicationService } from "../../services/communication";
 
 export const QuotationApp: React.FC = () => {
   const {
@@ -241,47 +242,95 @@ export const QuotationApp: React.FC = () => {
     return { subtotal, tax, discount, total };
   };
 
-  const handleSaveQuotation = () => {
+  const handleSaveQuotation = async () => {
     const selectedClient = clients.find((c) => c.id === formData.clientId);
     if (!selectedClient) return;
 
     const { subtotal, tax, discount, total } = calculateTotals();
 
-    if (currentQuotation) {
-      // Update existing quotation
-      updateQuotation(currentQuotation.id, {
-        clientId: formData.clientId,
-        clientName: selectedClient.name,
-        date: formData.date,
-        expiryDate: formData.expiryDate,
-        items: formData.items,
-        subtotal,
-        tax,
-        discount,
-        total,
-        notes: formData.notes,
-        terms: formData.terms,
-        status: formData.status,
-      });
-    } else {
-      // Create new quotation
-      addQuotation({
-        clientId: formData.clientId,
-        clientName: selectedClient.name,
-        date: formData.date,
-        expiryDate: formData.expiryDate,
-        items: formData.items,
-        subtotal,
-        tax,
-        discount,
-        total,
-        notes: formData.notes,
-        terms: formData.terms,
-        status: formData.status,
-      });
-    }
+    try {
+      let savedQuotation;
 
-    onClose();
+      if (currentQuotation) {
+        // Update existing quotation
+        savedQuotation = await updateQuotation(currentQuotation.id, {
+          clientId: formData.clientId,
+          clientName: selectedClient.name,
+          date: formData.date,
+          expiryDate: formData.expiryDate,
+          items: formData.items,
+          subtotal,
+          tax,
+          discount,
+          total,
+          notes: formData.notes,
+          terms: formData.terms,
+          status: formData.status,
+        });
+      } else {
+        // Create new quotation
+        savedQuotation = await addQuotation({
+          clientId: formData.clientId,
+          clientName: selectedClient.name,
+          date: formData.date,
+          expiryDate: formData.expiryDate,
+          items: formData.items,
+          subtotal,
+          tax,
+          discount,
+          total,
+          notes: formData.notes,
+          terms: formData.terms,
+          status: formData.status,
+        });
+      }
+
+      onClose();
+
+      // Auto-send quotation if it's not a draft
+      if (savedQuotation && formData.status !== "draft") {
+        const shouldSend = window.confirm(
+          `Quotation saved successfully! Would you like to send it to ${selectedClient.name} via email and WhatsApp?`
+        );
+
+        if (shouldSend) {
+          CommunicationService.sendQuotationBoth(
+            savedQuotation,
+            selectedClient
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error saving quotation:", error);
+      alert("Error saving quotation. Please try again.");
+    }
+  };
+
+  const handleSendEmail = (quotation: QuotationType) => {
+    const client = clients.find((c) => c.id === quotation.clientId);
+    if (client) {
+      CommunicationService.sendQuotationByEmail(quotation, client);
+    } else {
+      alert("Client information not found");
+    }
+  };
+
+  const handleSendWhatsApp = (quotation: QuotationType) => {
+    const client = clients.find((c) => c.id === quotation.clientId);
+    if (client) {
+      CommunicationService.sendQuotationByWhatsApp(quotation, client);
+    } else {
+      alert("Client information not found");
+    }
+  };
+
+  const handlePrintQuotation = (quotation: QuotationType) => {
+    const client = clients.find((c) => c.id === quotation.clientId);
+    if (client) {
+      CommunicationService.printQuotation(quotation, client);
+    } else {
+      alert("Client information not found");
+    }
   };
 
   const handleDuplicateQuotation = (quotation: QuotationType) => {
@@ -437,12 +486,13 @@ export const QuotationApp: React.FC = () => {
                   </Dropdown>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Button
                       isIconOnly
                       size="sm"
                       variant="light"
                       onPress={() => handleViewQuotation(quotation)}
+                      title="View"
                     >
                       <Icon icon="lucide:eye" className="text-default-500" />
                     </Button>
@@ -451,6 +501,7 @@ export const QuotationApp: React.FC = () => {
                       size="sm"
                       variant="light"
                       onPress={() => handleEditQuotation(quotation)}
+                      title="Edit"
                     >
                       <Icon icon="lucide:edit" className="text-default-500" />
                     </Button>
@@ -458,7 +509,43 @@ export const QuotationApp: React.FC = () => {
                       isIconOnly
                       size="sm"
                       variant="light"
+                      onPress={() => handleSendEmail(quotation)}
+                      title="Send Email"
+                      color="primary"
+                    >
+                      <Icon icon="lucide:mail" className="text-primary-500" />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onPress={() => handleSendWhatsApp(quotation)}
+                      title="Send WhatsApp"
+                      color="success"
+                    >
+                      <Icon
+                        icon="lucide:message-circle"
+                        className="text-success-500"
+                      />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onPress={() => handlePrintQuotation(quotation)}
+                      title="Print"
+                    >
+                      <Icon
+                        icon="lucide:printer"
+                        className="text-default-500"
+                      />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
                       onPress={() => handleDuplicateQuotation(quotation)}
+                      title="Duplicate"
                     >
                       <Icon icon="lucide:copy" className="text-default-500" />
                     </Button>
@@ -467,8 +554,9 @@ export const QuotationApp: React.FC = () => {
                       size="sm"
                       variant="light"
                       onPress={() => handleDeleteClick(quotation.id)}
+                      title="Delete"
                     >
-                      <Icon icon="lucide:trash" className="text-default-500" />
+                      <Icon icon="lucide:trash" className="text-danger-500" />
                     </Button>
                   </div>
                 </TableCell>

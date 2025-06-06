@@ -5,13 +5,21 @@ import {
   QuotationType,
   QuotationItemType,
   TemplateType,
+  DesktopItemType,
 } from "../types/window";
 import {
   clientsApi,
   productsApi,
   quotationsApi,
   templatesApi,
+  desktopItemsApi,
 } from "../services/api";
+import {
+  quotations as mockQuotations,
+  clients as mockClients,
+  products as mockProducts,
+  templates as mockTemplates,
+} from "../data/mock-data";
 
 interface DataContextType {
   // Loading states
@@ -73,6 +81,18 @@ interface DataContextType {
   ) => Promise<TemplateType | undefined>;
   deleteTemplate: (id: string) => Promise<void>;
 
+  // Desktop Items
+  desktopItems: DesktopItemType[];
+  getDesktopItem: (id: string) => DesktopItemType | undefined;
+  addDesktopItem: (
+    item: Omit<DesktopItemType, "id" | "createdAt">
+  ) => Promise<DesktopItemType>;
+  updateDesktopItem: (
+    id: string,
+    item: Partial<DesktopItemType>
+  ) => Promise<DesktopItemType | undefined>;
+  deleteDesktopItem: (id: string) => Promise<void>;
+
   // Calculations
   calculateQuotationTotals: (items: QuotationItemType[]) => {
     subtotal: number;
@@ -118,6 +138,13 @@ export const DataContext = React.createContext<DataContextType>({
   updateTemplate: async () => undefined,
   deleteTemplate: async () => {},
 
+  // Desktop Items
+  desktopItems: [],
+  getDesktopItem: () => undefined,
+  addDesktopItem: async () => ({} as DesktopItemType),
+  updateDesktopItem: async () => undefined,
+  deleteDesktopItem: async () => {},
+
   // Calculations
   calculateQuotationTotals: () => ({ subtotal: 0, tax: 0, total: 0 }),
 
@@ -132,6 +159,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [clients, setClients] = React.useState<ClientType[]>([]);
   const [products, setProducts] = React.useState<ProductType[]>([]);
   const [templates, setTemplates] = React.useState<TemplateType[]>([]);
+  const [desktopItems, setDesktopItems] = React.useState<DesktopItemType[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -145,21 +173,35 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(true);
     setError(null);
     try {
-      const [quotationsData, clientsData, productsData, templatesData] =
-        await Promise.all([
-          quotationsApi.getAll(),
-          clientsApi.getAll(),
-          productsApi.getAll(),
-          templatesApi.getAll(),
-        ]);
+      const [
+        quotationsData,
+        clientsData,
+        productsData,
+        templatesData,
+        desktopItemsData,
+      ] = await Promise.all([
+        quotationsApi.getAll(),
+        clientsApi.getAll(),
+        productsApi.getAll(),
+        templatesApi.getAll(),
+        desktopItemsApi.getAll(),
+      ]);
 
       setQuotations(quotationsData);
       setClients(clientsData);
       setProducts(productsData);
       setTemplates(templatesData);
+      setDesktopItems(desktopItemsData);
     } catch (err: any) {
-      console.error("Failed to load data:", err);
-      setError(err.message || "Failed to load data");
+      console.error("Failed to load data from API, using mock data:", err);
+      setError("Using offline mode - data will not be saved");
+
+      // Fallback to mock data
+      setQuotations(mockQuotations);
+      setClients(mockClients);
+      setProducts(mockProducts);
+      setTemplates(mockTemplates);
+      setDesktopItems([]); // Start with empty desktop items if API fails
     } finally {
       setLoading(false);
     }
@@ -184,9 +226,41 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       setQuotations([...quotations, newQuotation]);
       return newQuotation;
     } catch (err: any) {
-      console.error("Failed to create quotation:", err);
-      setError(err.message || "Failed to create quotation");
-      throw err;
+      console.error(
+        "Failed to create quotation via API, creating locally:",
+        err
+      );
+
+      // Fallback: create locally with mock ID
+      const client = clients.find((c) => c.id === quotation.clientId);
+      const newQuotation: QuotationType = {
+        id: `Q-${Date.now()}`,
+        clientId: quotation.clientId,
+        clientName: client?.name || "Unknown Client",
+        date: quotation.date,
+        expiryDate: quotation.expiryDate,
+        items: quotation.items,
+        notes: quotation.notes || "",
+        terms: quotation.terms || "",
+        status: quotation.status || "draft",
+        subtotal: quotation.items.reduce((sum, item) => sum + item.total, 0),
+        tax: quotation.items.reduce(
+          (sum, item) =>
+            sum + (item.tax / 100) * item.unitPrice * item.quantity,
+          0
+        ),
+        discount: quotation.items.reduce(
+          (sum, item) =>
+            sum + (item.discount / 100) * item.unitPrice * item.quantity,
+          0
+        ),
+        total: quotation.items.reduce((sum, item) => sum + item.total, 0),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setQuotations([...quotations, newQuotation]);
+      return newQuotation;
     }
   };
 
@@ -248,9 +322,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       setClients([...clients, newClient]);
       return newClient;
     } catch (err: any) {
-      console.error("Failed to create client:", err);
-      setError(err.message || "Failed to create client");
-      throw err;
+      console.error("Failed to create client via API, creating locally:", err);
+
+      // Fallback: create locally with mock ID
+      const newClient: ClientType = {
+        id: `C-${Date.now()}`,
+        ...client,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setClients([...clients, newClient]);
+      return newClient;
     }
   };
 
@@ -297,9 +380,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       setProducts([...products, newProduct]);
       return newProduct;
     } catch (err: any) {
-      console.error("Failed to create product:", err);
-      setError(err.message || "Failed to create product");
-      throw err;
+      console.error("Failed to create product via API, creating locally:", err);
+
+      // Fallback: create locally with mock ID
+      const newProduct: ProductType = {
+        id: `P-${Date.now()}`,
+        ...product,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setProducts([...products, newProduct]);
+      return newProduct;
     }
   };
 
@@ -385,6 +477,51 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Desktop Items functions
+  const getDesktopItem = (id: string) => {
+    return desktopItems.find((item) => item.id === id);
+  };
+
+  const addDesktopItem = async (
+    item: Omit<DesktopItemType, "id" | "createdAt">
+  ) => {
+    try {
+      const newItem = await desktopItemsApi.create(item);
+      setDesktopItems([...desktopItems, newItem]);
+      return newItem;
+    } catch (err: any) {
+      console.error("Failed to add desktop item:", err);
+      setError(err.message || "Failed to add desktop item");
+      throw err;
+    }
+  };
+
+  const updateDesktopItem = async (
+    id: string,
+    item: Partial<DesktopItemType>
+  ) => {
+    try {
+      const updatedItem = await desktopItemsApi.update(id, item);
+      setDesktopItems(desktopItems.map((i) => (i.id === id ? updatedItem : i)));
+      return updatedItem;
+    } catch (err: any) {
+      console.error("Failed to update desktop item:", err);
+      setError(err.message || "Failed to update desktop item");
+      throw err;
+    }
+  };
+
+  const deleteDesktopItem = async (id: string) => {
+    try {
+      await desktopItemsApi.delete(id);
+      setDesktopItems(desktopItems.filter((i) => i.id !== id));
+    } catch (err: any) {
+      console.error("Failed to delete desktop item:", err);
+      setError(err.message || "Failed to delete desktop item");
+      throw err;
+    }
+  };
+
   // Calculation functions
   const calculateQuotationTotals = (items: QuotationItemType[]) => {
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
@@ -432,6 +569,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         addTemplate,
         updateTemplate,
         deleteTemplate,
+
+        // Desktop Items
+        desktopItems,
+        getDesktopItem,
+        addDesktopItem,
+        updateDesktopItem,
+        deleteDesktopItem,
 
         // Calculations
         calculateQuotationTotals,

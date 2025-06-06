@@ -19,6 +19,17 @@ export interface DesktopIconType {
   onClick: () => void;
 }
 
+export interface DesktopItemType {
+  id: string;
+  name: string;
+  type: "folder" | "shortcut" | "document" | "app";
+  icon: string;
+  position: { x: number; y: number };
+  target?: string; // For shortcuts
+  content?: string; // For documents
+  createdAt: string;
+}
+
 export interface AppType {
   id: string;
   name: string;
@@ -42,7 +53,7 @@ export interface QuotationType {
   total: number;
   notes: string;
   terms: string;
-  status: 'draft' | 'pending' | 'sent' | 'approved' | 'rejected';
+  status: "draft" | "pending" | "sent" | "approved" | "rejected";
   createdAt: string;
   updatedAt: string;
 }
@@ -71,6 +82,23 @@ export interface ClientType {
   zipCode: string;
   country: string;
   notes: string;
+
+  // Enhanced CRM fields
+  category?: string; // "premium", "standard", "basic"
+  segment?: string; // "enterprise", "sme", "individual"
+  creditLimit?: number;
+  paymentTerms?: number; // days
+  taxId?: string;
+  website?: string;
+  industry?: string;
+  companySize?: string;
+  preferredCurrency?: string;
+
+  // Status and tracking
+  status: string; // "active", "inactive", "suspended"
+  lastContactDate?: string;
+  nextFollowUp?: string;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -79,7 +107,7 @@ export interface ProductType {
   id: string;
   name: string;
   description: string;
-  type: 'product' | 'service' | 'subscription';
+  type: "product" | "service" | "subscription";
   price: number;
   unit: string;
   tax: number;

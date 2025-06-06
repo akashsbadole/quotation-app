@@ -22,11 +22,31 @@ model Client {
   zipCode   String
   country   String
   notes     String?
+
+  // Enhanced CRM fields
+  category        String?  // "premium", "standard", "basic"
+  segment         String?  // "enterprise", "sme", "individual"
+  creditLimit     Float?   @default(0)
+  paymentTerms    Int?     @default(30) // days
+  taxId           String?
+  website         String?
+  industry        String?
+  companySize     String?
+  preferredCurrency String? @default("USD")
+
+  // Status and tracking
+  status          String   @default("active") // "active", "inactive", "suspended"
+  lastContactDate DateTime?
+  nextFollowUp    DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  quotations Quotation[]
+  quotations        Quotation[]
+  communications    Communication[]
+  pricingAgreements PricingAgreement[]
+  approvals         QuotationApproval[]
 
   @@map("clients")
 }
@@ -41,11 +61,43 @@ model Product {
   tax         Float       @default(0)
   stock       Int?
   image       String?
+
+  // Enhanced product fields
+  category        String?
+  sku             String?  @unique
+  specifications  String?  // JSON string for detailed specs
+  images          String?  // JSON array of image URLs
+  documents       String?  // JSON array of document URLs
+  weight          Float?
+  dimensions      String?  // "L x W x H"
+  manufacturer    String?
+  brand           String?
+  model           String?
+  warranty        String?
+
+  // Pricing and inventory
+  costPrice       Float?
+  marginPercent   Float?   @default(0)
+  taxable         Boolean  @default(true)
+  taxCategory     String?  @default("standard")
+  currency        String   @default("USD")
+  inStock         Boolean  @default(true)
+  stockLevel      Int      @default(0)
+  minStock        Int      @default(0)
+
+  // Status and tracking
+  status          String   @default("active") // "active", "inactive", "discontinued"
+  isService       Boolean  @default(false)
+  isBundle        Boolean  @default(false)
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   // Relations
-  quotationItems QuotationItem[]
+  quotationItems    QuotationItem[]
+  pricingTiers      PricingTier[]
+  bundleItems       BundleItem[] @relation("BundleProduct")
+  bundleComponents  BundleItem[] @relation("ComponentProduct")
 
   @@map("products")
 }
@@ -62,12 +114,48 @@ model Quotation {
   notes      String?
   terms      String?
   status     String          @default("DRAFT") // "DRAFT", "PENDING", "SENT", "APPROVED", "REJECTED"
+
+  // Enhanced quotation fields
+  referenceNumber   String    @unique
+  version           Int       @default(1)
+  parentQuotationId String?   // For version control
+  templateId        String?
+  currency          String    @default("USD")
+  exchangeRate      Float     @default(1.0)
+
+  // Workflow and approval
+  approvalRequired  Boolean   @default(false)
+  approvalStatus    String    @default("none") // "none", "pending", "approved", "rejected"
+  approvedBy        String?
+  approvedAt        DateTime?
+  rejectionReason   String?
+
+  // Communication and tracking
+  sentAt            DateTime?
+  viewedAt          DateTime?
+  lastFollowUp      DateTime?
+  nextFollowUp      DateTime?
+  priority          String    @default("medium") // "low", "medium", "high", "urgent"
+
+  // Analytics and conversion
+  conversionStatus  String    @default("open") // "open", "won", "lost", "expired"
+  winLossReason     String?
+  competitorInfo    String?
+  profitMargin      Float?
+
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
 
   // Relations
-  client Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  items  QuotationItem[]
+  client            Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  items             QuotationItem[]
+  template          Template?           @relation(fields: [templateId], references: [id])
+  parentQuotation   Quotation?          @relation("QuotationVersions", fields: [parentQuotationId], references: [id])
+  childQuotations   Quotation[]         @relation("QuotationVersions")
+  approvals         QuotationApproval[]
+  communications    Communication[]
+  activities        QuotationActivity[]
+  documents         QuotationDocument[]
 
   @@map("quotations")
 }
@@ -98,12 +186,374 @@ model Template {
   category    String
   content     String
   thumbnail   String?
+
+  // Enhanced template fields
+  type        String   @default("quotation") // "quotation", "terms", "email"
+  isDefault   Boolean  @default(false)
+  industry    String?
+  language    String   @default("en")
+  variables   String?  // JSON string of template variables
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Relations
+  quotations  Quotation[]
+
   @@map("templates")
+}
+
+model DesktopItem {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // "folder", "shortcut", "document", "app"
+  icon      String
+  positionX Float
+  positionY Float
+  target    String?  // For shortcuts
+  content   String?  // For documents
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("desktop_items")
+}
+
+// Pricing and Bundle Management
+model PricingTier {
+  id        String   @id @default(cuid())
+  productId String
+  name      String   // "bulk", "volume", "customer-specific"
+  minQty    Int
+  maxQty    Int?
+  price     Float
+  discount  Float    @default(0)
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("pricing_tiers")
+}
+
+model BundleItem {
+  id              String   @id @default(cuid())
+  bundleProductId String
+  componentId     String
+  quantity        Int      @default(1)
+  discount        Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  bundleProduct Product   @relation("BundleProduct", fields: [bundleProductId], references: [id], onDelete: Cascade)
+  component     Product   @relation("ComponentProduct", fields: [componentId], references: [id])
+
+  @@map("bundle_items")
+}
+
+model PricingAgreement {
+  id          String   @id @default(cuid())
+  clientId    String
+  productId   String?
+  name        String
+  description String?
+  price       Float
+  discount    Float    @default(0)
+  validFrom   DateTime
+  validTo     DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("pricing_agreements")
+}
+
+// Workflow and Approval Management
+model QuotationApproval {
+  id          String    @id @default(cuid())
+  quotationId String
+  approverId  String
+  level       Int       @default(1)
+  status      String    @default("pending") // "pending", "approved", "rejected"
+  comments    String?
+  approvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  approver  Client    @relation(fields: [approverId], references: [id])
+
+  @@map("quotation_approvals")
+}
+
+model Communication {
+  id          String   @id @default(cuid())
+  quotationId String?
+  clientId    String
+  type        String   // "email", "sms", "call", "meeting", "note"
+  subject     String?
+  content     String
+  direction   String   // "inbound", "outbound"
+  status      String   @default("sent") // "draft", "sent", "delivered", "read", "failed"
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  quotation Quotation? @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  client    Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("communications")
+}
+
+model QuotationActivity {
+  id          String   @id @default(cuid())
+  quotationId String
+  userId      String?  // User who performed the action
+  action      String   // "created", "updated", "sent", "viewed", "approved", "rejected"
+  description String
+  metadata    String?  // JSON string for additional data
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+
+  @@map("quotation_activities")
+}
+
+model QuotationDocument {
+  id          String   @id @default(cuid())
+  quotationId String
+  name        String
+  type        String   // "pdf", "word", "excel", "image"
+  url         String
+  size        Int?     // File size in bytes
+  version     Int      @default(1)
+  isMain      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+
+  @@map("quotation_documents")
+}
+
+// Advanced Features Models
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  role        String   @default("user") // "admin", "manager", "user", "viewer"
+  permissions String?  // JSON string of permissions
+  department  String?
+  isActive    Boolean  @default(true)
+  lastLogin   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  notifications      Notification[]
+
+  @@map("users")
+}
+
+model Currency {
+  id           String   @id @default(cuid())
+  code         String   @unique // "USD", "EUR", "GBP"
+  name         String   // "US Dollar"
+  symbol       String   // "$"
+  exchangeRate Float    @default(1.0)
+  isDefault    Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  lastUpdated  DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("currencies")
+}
+
+model TaxRate {
+  id          String   @id @default(cuid())
+  name        String   // "VAT", "GST", "Sales Tax"
+  rate        Float    // 0.20 for 20%
+  type        String   @default("percentage") // "percentage", "fixed"
+  country     String?
+  region      String?
+  category    String?  // "standard", "reduced", "zero"
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  validFrom   DateTime
+  validTo     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tax_rates")
+}
+
+model WorkflowTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // "approval", "notification", "automation"
+  conditions  String   // JSON string of conditions
+  actions     String   // JSON string of actions
+  isActive    Boolean  @default(true)
+  priority    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  workflows   Workflow[]
+
+  @@map("workflow_templates")
+}
+
+model Workflow {
+  id         String   @id @default(cuid())
+  templateId String
+  entityId   String   // quotation ID, client ID, etc.
+  entityType String   // "quotation", "client", "product"
+  status     String   @default("active") // "active", "completed", "cancelled"
+  currentStep Int     @default(1)
+  data       String?  // JSON string of workflow data
+  startedAt  DateTime @default(now())
+  completedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  template   WorkflowTemplate @relation(fields: [templateId], references: [id])
+  steps      WorkflowStep[]
+
+  @@map("workflows")
+}
+
+model WorkflowStep {
+  id          String    @id @default(cuid())
+  workflowId  String
+  stepNumber  Int
+  name        String
+  type        String    // "approval", "notification", "automation"
+  assigneeId  String?
+  status      String    @default("pending") // "pending", "completed", "skipped"
+  data        String?   // JSON string of step data
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  workflow    Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@map("workflow_steps")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // "approval", "reminder", "alert", "info"
+  title       String
+  message     String
+  data        String?  // JSON string of notification data
+  isRead      Boolean  @default(false)
+  priority    String   @default("medium") // "low", "medium", "high", "urgent"
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  entityType  String   // "quotation", "client", "product"
+  entityId    String
+  action      String   // "create", "update", "delete", "view", "send"
+  oldValues   String?  // JSON string of old values
+  newValues   String?  // JSON string of new values
+  ipAddress   String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model Integration {
+  id          String   @id @default(cuid())
+  name        String   // "Salesforce", "QuickBooks", "Mailchimp"
+  type        String   // "crm", "erp", "email", "accounting"
+  config      String   // JSON string of configuration
+  isActive    Boolean  @default(true)
+  lastSync    DateTime?
+  syncStatus  String   @default("idle") // "idle", "syncing", "error"
+  errorLog    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("integrations")
+}
+
+model Analytics {
+  id          String   @id @default(cuid())
+  type        String   // "conversion", "performance", "revenue"
+  period      String   // "daily", "weekly", "monthly", "quarterly"
+  date        DateTime
+  data        String   // JSON string of analytics data
+  createdAt   DateTime @default(now())
+
+  @@map("analytics")
+}
+
+model CustomField {
+  id          String   @id @default(cuid())
+  entityType  String   // "quotation", "client", "product"
+  name        String
+  label       String
+  type        String   // "text", "number", "date", "select", "checkbox"
+  options     String?  // JSON string for select options
+  isRequired  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("custom_fields")
+}
+
+model CustomFieldValue {
+  id          String   @id @default(cuid())
+  fieldId     String
+  entityId    String
+  value       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  field       CustomField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@map("custom_field_values")
 }
 
 // Note: SQLite doesn't support enums, so we use strings instead
 // ProductType: "PRODUCT", "SERVICE", "SUBSCRIPTION"
 // QuotationStatus: "DRAFT", "PENDING", "SENT", "APPROVED", "REJECTED"
+// DesktopItemType: "folder", "shortcut", "document", "app"
+// CommunicationType: "email", "sms", "call", "meeting", "note"
+// ApprovalStatus: "pending", "approved", "rejected"
+// UserRole: "admin", "manager", "user", "viewer"
+// WorkflowType: "approval", "notification", "automation"
+// NotificationType: "approval", "reminder", "alert", "info"

@@ -11,11 +11,11 @@ function App() {
     <ErrorBoundary>
       <NotificationProvider>
         <Router>
-          <AppContextProvider>
-            <DataProvider>
+          <DataProvider>
+            <AppContextProvider>
               <Desktop />
-            </DataProvider>
-          </AppContextProvider>
+            </AppContextProvider>
+          </DataProvider>
         </Router>
       </NotificationProvider>
     </ErrorBoundary>
