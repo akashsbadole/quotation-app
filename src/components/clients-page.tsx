@@ -136,6 +136,10 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
     setShowViewModal(true);
   };
 
+  const handleEditClient = (client: any) => {
+    onNavigate?.("add-client", client);
+  };
+
   const handleSaveClient = () => {
     // In a real app, this would save to the database
     console.log("Saving client:", newClient);
@@ -305,11 +309,13 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
                   View Details
                 </motion.button>
                 <motion.button
-                  className="px-3 py-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleEditClient(client)}
+                  title="Edit Client"
                 >
-                  <Icon icon="lucide:more-horizontal" />
+                  <Icon icon="lucide:edit" />
                 </motion.button>
               </div>
             </motion.div>

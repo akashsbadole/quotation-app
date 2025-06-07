@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Icon } from '@iconify/react';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Icon } from "@iconify/react";
 
 interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'manager' | 'sales' | 'viewer';
+  role: "admin" | "manager" | "sales" | "viewer";
   department: string;
-  status: 'active' | 'inactive' | 'pending';
+  status: "active" | "inactive" | "pending";
   lastLogin: string;
   createdAt: string;
   permissions: string[];
@@ -27,102 +27,127 @@ interface UserManagementProps {
   onNavigate?: (section: string) => void;
 }
 
-export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) => {
-  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'permissions'>('users');
+export const UserManagement: React.FC<UserManagementProps> = ({
+  onNavigate,
+}) => {
+  const [activeTab, setActiveTab] = useState<"users" | "roles" | "permissions">(
+    "users"
+  );
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive" | "pending"
+  >("all");
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    role: "sales" as const,
+    department: "",
+    phone: "",
+    isActive: true,
+  });
 
   // Mock data for demonstration
   useEffect(() => {
     const mockUsers: User[] = [
       {
-        id: 'user-1',
-        name: 'John Smith',
-        email: 'john.smith@company.com',
-        role: 'admin',
-        department: 'IT',
-        status: 'active',
-        lastLogin: '2024-12-01T10:30:00Z',
-        createdAt: '2024-01-15T09:00:00Z',
-        permissions: ['all'],
+        id: "user-1",
+        name: "John Smith",
+        email: "john.smith@company.com",
+        role: "admin",
+        department: "IT",
+        status: "active",
+        lastLogin: "2024-12-01T10:30:00Z",
+        createdAt: "2024-01-15T09:00:00Z",
+        permissions: ["all"],
       },
       {
-        id: 'user-2',
-        name: 'Sarah Johnson',
-        email: 'sarah.johnson@company.com',
-        role: 'manager',
-        department: 'Sales',
-        status: 'active',
-        lastLogin: '2024-12-01T14:15:00Z',
-        createdAt: '2024-02-01T10:30:00Z',
-        permissions: ['quotations.manage', 'customers.view', 'reports.view'],
+        id: "user-2",
+        name: "Sarah Johnson",
+        email: "sarah.johnson@company.com",
+        role: "manager",
+        department: "Sales",
+        status: "active",
+        lastLogin: "2024-12-01T14:15:00Z",
+        createdAt: "2024-02-01T10:30:00Z",
+        permissions: ["quotations.manage", "customers.view", "reports.view"],
       },
       {
-        id: 'user-3',
-        name: 'Mike Davis',
-        email: 'mike.davis@company.com',
-        role: 'sales',
-        department: 'Sales',
-        status: 'active',
-        lastLogin: '2024-11-30T16:45:00Z',
-        createdAt: '2024-03-10T11:15:00Z',
-        permissions: ['quotations.create', 'customers.view'],
+        id: "user-3",
+        name: "Mike Davis",
+        email: "mike.davis@company.com",
+        role: "sales",
+        department: "Sales",
+        status: "active",
+        lastLogin: "2024-11-30T16:45:00Z",
+        createdAt: "2024-03-10T11:15:00Z",
+        permissions: ["quotations.create", "customers.view"],
       },
       {
-        id: 'user-4',
-        name: 'Emily Chen',
-        email: 'emily.chen@company.com',
-        role: 'viewer',
-        department: 'Finance',
-        status: 'inactive',
-        lastLogin: '2024-11-25T09:20:00Z',
-        createdAt: '2024-04-05T14:00:00Z',
-        permissions: ['reports.view'],
+        id: "user-4",
+        name: "Emily Chen",
+        email: "emily.chen@company.com",
+        role: "viewer",
+        department: "Finance",
+        status: "inactive",
+        lastLogin: "2024-11-25T09:20:00Z",
+        createdAt: "2024-04-05T14:00:00Z",
+        permissions: ["reports.view"],
       },
       {
-        id: 'user-5',
-        name: 'David Wilson',
-        email: 'david.wilson@company.com',
-        role: 'sales',
-        department: 'Sales',
-        status: 'pending',
-        lastLogin: '',
-        createdAt: '2024-11-28T16:30:00Z',
-        permissions: ['quotations.create', 'customers.view'],
+        id: "user-5",
+        name: "David Wilson",
+        email: "david.wilson@company.com",
+        role: "sales",
+        department: "Sales",
+        status: "pending",
+        lastLogin: "",
+        createdAt: "2024-11-28T16:30:00Z",
+        permissions: ["quotations.create", "customers.view"],
       },
     ];
 
     const mockRoles: Role[] = [
       {
-        id: 'admin',
-        name: 'Administrator',
-        description: 'Full system access with all permissions',
-        permissions: ['all'],
+        id: "admin",
+        name: "Administrator",
+        description: "Full system access with all permissions",
+        permissions: ["all"],
         userCount: 1,
       },
       {
-        id: 'manager',
-        name: 'Manager',
-        description: 'Management access with team oversight capabilities',
-        permissions: ['quotations.manage', 'customers.manage', 'reports.view', 'users.view'],
+        id: "manager",
+        name: "Manager",
+        description: "Management access with team oversight capabilities",
+        permissions: [
+          "quotations.manage",
+          "customers.manage",
+          "reports.view",
+          "users.view",
+        ],
         userCount: 1,
       },
       {
-        id: 'sales',
-        name: 'Sales Representative',
-        description: 'Sales-focused access for quotation and customer management',
-        permissions: ['quotations.create', 'quotations.edit', 'customers.view', 'customers.edit'],
+        id: "sales",
+        name: "Sales Representative",
+        description:
+          "Sales-focused access for quotation and customer management",
+        permissions: [
+          "quotations.create",
+          "quotations.edit",
+          "customers.view",
+          "customers.edit",
+        ],
         userCount: 2,
       },
       {
-        id: 'viewer',
-        name: 'Viewer',
-        description: 'Read-only access for reporting and analytics',
-        permissions: ['reports.view', 'quotations.view'],
+        id: "viewer",
+        name: "Viewer",
+        description: "Read-only access for reporting and analytics",
+        permissions: ["reports.view", "quotations.view"],
         userCount: 1,
       },
     ];
@@ -131,58 +156,123 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
     setRoles(mockRoles);
   }, []);
 
-  const filteredUsers = users.filter(user => {
-    if (statusFilter !== 'all' && user.status !== statusFilter) return false;
-    if (searchQuery && !user.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !user.email.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+  const filteredUsers = users.filter((user) => {
+    if (statusFilter !== "all" && user.status !== statusFilter) return false;
+    if (
+      searchQuery &&
+      !user.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !user.email.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+      return false;
     return true;
   });
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'Never';
+    if (!dateString) return "Never";
     return new Date(dateString).toLocaleDateString();
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-red-100 text-red-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "inactive":
+        return "bg-red-100 text-red-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'bg-purple-100 text-purple-800';
-      case 'manager':
-        return 'bg-blue-100 text-blue-800';
-      case 'sales':
-        return 'bg-green-100 text-green-800';
-      case 'viewer':
-        return 'bg-gray-100 text-gray-800';
+      case "admin":
+        return "bg-purple-100 text-purple-800";
+      case "manager":
+        return "bg-blue-100 text-blue-800";
+      case "sales":
+        return "bg-green-100 text-green-800";
+      case "viewer":
+        return "bg-gray-100 text-gray-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  const handleUserStatusChange = (userId: string, newStatus: 'active' | 'inactive') => {
-    setUsers(prev => prev.map(user => 
-      user.id === userId ? { ...user, status: newStatus } : user
-    ));
+  const handleUserStatusChange = (
+    userId: string,
+    newStatus: "active" | "inactive"
+  ) => {
+    setUsers((prev) =>
+      prev.map((user) =>
+        user.id === userId ? { ...user, status: newStatus } : user
+      )
+    );
   };
 
   const handleDeleteUser = (userId: string) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      setUsers(prev => prev.filter(user => user.id !== userId));
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      setUsers((prev) => prev.filter((user) => user.id !== userId));
       if (selectedUser?.id === userId) {
         setSelectedUser(null);
       }
+    }
+  };
+
+  const handleAddUser = () => {
+    if (!newUser.name || !newUser.email) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    const user: User = {
+      id: `user-${Date.now()}`,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      department: newUser.department,
+      status: newUser.isActive ? "active" : "inactive",
+      lastLogin: "",
+      createdAt: new Date().toISOString(),
+      permissions: getPermissionsForRole(newUser.role),
+    };
+
+    setUsers((prev) => [...prev, user]);
+    setNewUser({
+      name: "",
+      email: "",
+      role: "sales",
+      department: "",
+      phone: "",
+      isActive: true,
+    });
+    setShowUserModal(false);
+    alert("User added successfully!");
+  };
+
+  const getPermissionsForRole = (role: string): string[] => {
+    switch (role) {
+      case "admin":
+        return ["all"];
+      case "manager":
+        return [
+          "quotations.manage",
+          "customers.manage",
+          "reports.view",
+          "users.view",
+        ];
+      case "sales":
+        return [
+          "quotations.create",
+          "quotations.edit",
+          "customers.view",
+          "customers.edit",
+        ];
+      case "viewer":
+        return ["reports.view", "quotations.view"];
+      default:
+        return ["quotations.view"];
     }
   };
 
@@ -197,13 +287,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
                 className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors duration-200"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => onNavigate?.('settings-users')}
+                onClick={() => onNavigate?.("settings-users")}
               >
                 <Icon icon="lucide:arrow-left" className="text-xl" />
               </motion.button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-                <p className="text-sm text-gray-600">Manage user accounts, roles, and permissions</p>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  User Management
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Manage user accounts, roles, and permissions
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -226,16 +320,26 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             {[
-              { id: 'users', name: 'Users', icon: 'lucide:users', count: users.length },
-              { id: 'roles', name: 'Roles', icon: 'lucide:shield', count: roles.length },
-              { id: 'permissions', name: 'Permissions', icon: 'lucide:key' },
+              {
+                id: "users",
+                name: "Users",
+                icon: "lucide:users",
+                count: users.length,
+              },
+              {
+                id: "roles",
+                name: "Roles",
+                icon: "lucide:shield",
+                count: roles.length,
+              },
+              { id: "permissions", name: "Permissions", icon: "lucide:key" },
             ].map((tab) => (
               <motion.button
                 key={tab.id}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center space-x-2 ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -257,7 +361,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AnimatePresence mode="wait">
-          {activeTab === 'users' && (
+          {activeTab === "users" && (
             <motion.div
               key="users"
               initial={{ opacity: 0, y: 20 }}
@@ -276,9 +380,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                    <Icon 
-                      icon="lucide:search" 
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
+                    <Icon
+                      icon="lucide:search"
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                     />
                   </div>
                   <div className="flex space-x-3">
@@ -328,16 +432,27 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                <Icon icon="lucide:user" className="text-blue-600" />
+                                <Icon
+                                  icon="lucide:user"
+                                  className="text-blue-600"
+                                />
                               </div>
                               <div>
-                                <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                                <div className="text-sm text-gray-500">{user.email}</div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {user.name}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {user.email}
+                                </div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(
+                                user.role
+                              )}`}
+                            >
                               {user.role}
                             </span>
                           </td>
@@ -345,7 +460,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
                             {user.department}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}>
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                                user.status
+                              )}`}
+                            >
                               {user.status}
                             </span>
                           </td>
@@ -362,12 +481,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
                               >
                                 <Icon icon="lucide:edit" />
                               </motion.button>
-                              {user.status === 'active' ? (
+                              {user.status === "active" ? (
                                 <motion.button
                                   className="text-yellow-600 hover:text-yellow-900"
                                   whileHover={{ scale: 1.1 }}
                                   whileTap={{ scale: 0.9 }}
-                                  onClick={() => handleUserStatusChange(user.id, 'inactive')}
+                                  onClick={() =>
+                                    handleUserStatusChange(user.id, "inactive")
+                                  }
                                 >
                                   <Icon icon="lucide:pause" />
                                 </motion.button>
@@ -376,7 +497,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
                                   className="text-green-600 hover:text-green-900"
                                   whileHover={{ scale: 1.1 }}
                                   whileTap={{ scale: 0.9 }}
-                                  onClick={() => handleUserStatusChange(user.id, 'active')}
+                                  onClick={() =>
+                                    handleUserStatusChange(user.id, "active")
+                                  }
                                 >
                                   <Icon icon="lucide:play" />
                                 </motion.button>
@@ -400,7 +523,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
             </motion.div>
           )}
 
-          {activeTab === 'roles' && (
+          {activeTab === "roles" && (
             <motion.div
               key="roles"
               initial={{ opacity: 0, y: 20 }}
@@ -418,25 +541,41 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Icon icon="lucide:shield" className="text-2xl text-blue-600" />
+                          <Icon
+                            icon="lucide:shield"
+                            className="text-2xl text-blue-600"
+                          />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900">{role.name}</h3>
-                          <p className="text-sm text-gray-500">{role.userCount} users</p>
+                          <h3 className="font-semibold text-gray-900">
+                            {role.name}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {role.userCount} users
+                          </p>
                         </div>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-600 mb-4">{role.description}</p>
+                    <p className="text-sm text-gray-600 mb-4">
+                      {role.description}
+                    </p>
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Permissions:</h4>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                        Permissions:
+                      </h4>
                       <div className="flex flex-wrap gap-1">
                         {role.permissions.slice(0, 3).map((permission) => (
-                          <span key={permission} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                          <span
+                            key={permission}
+                            className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded"
+                          >
                             {permission}
                           </span>
                         ))}
                         {role.permissions.length > 3 && (
-                          <span className="text-xs text-gray-500">+{role.permissions.length - 3} more</span>
+                          <span className="text-xs text-gray-500">
+                            +{role.permissions.length - 3} more
+                          </span>
                         )}
                       </div>
                     </div>
@@ -455,7 +594,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
             </motion.div>
           )}
 
-          {activeTab === 'permissions' && (
+          {activeTab === "permissions" && (
             <motion.div
               key="permissions"
               initial={{ opacity: 0, y: 20 }}
@@ -465,8 +604,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
               className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
             >
               <div className="text-center py-12">
-                <Icon icon="lucide:key" className="text-6xl text-blue-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Permission Management</h3>
+                <Icon
+                  icon="lucide:key"
+                  className="text-6xl text-blue-400 mx-auto mb-4"
+                />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Permission Management
+                </h3>
                 <p className="text-gray-600 mb-4">
                   Configure detailed permissions and access controls
                 </p>
@@ -488,17 +632,116 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onNavigate }) =>
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
           >
-            <div className="text-center py-8">
-              <Icon icon="lucide:user-plus" className="text-6xl text-blue-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Add New User</h3>
-              <p className="text-gray-600 mb-4">User creation form coming soon</p>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-medium text-gray-900">
+                Add New User
+              </h3>
               <motion.button
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200"
+                className="p-2 text-gray-400 hover:text-gray-600"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowUserModal(false)}
+              >
+                <Icon icon="lucide:x" className="text-xl" />
+              </motion.button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  value={newUser.name}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, name: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter full name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, email: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter email address"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Role
+                </label>
+                <select
+                  value={newUser.role}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, role: e.target.value as any })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="sales">Sales Representative</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Administrator</option>
+                  <option value="viewer">Viewer</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  value={newUser.department}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, department: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter department"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={newUser.isActive}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, isActive: e.target.checked })
+                  }
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="isActive" className="text-sm text-gray-700">
+                  Active user
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <motion.button
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowUserModal(false)}
               >
-                Close
+                Cancel
+              </motion.button>
+              <motion.button
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleAddUser}
+              >
+                Add User
               </motion.button>
             </div>
           </motion.div>

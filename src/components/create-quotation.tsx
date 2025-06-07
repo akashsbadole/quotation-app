@@ -31,31 +31,36 @@ interface Template {
 }
 
 interface CreateQuotationProps {
-  onNavigate?: (section: string) => void;
+  onNavigate?: (section: string, data?: any) => void;
   templateId?: string;
   duplicateFromId?: string;
+  editingQuotation?: any;
 }
 
 export const CreateQuotation: React.FC<CreateQuotationProps> = ({
   onNavigate,
   templateId,
   duplicateFromId,
+  editingQuotation,
 }) => {
   const [quotationData, setQuotationData] = useState({
-    referenceNumber: "",
-    customerName: "",
-    customerEmail: "",
-    customerCompany: "",
-    customerPhone: "",
-    customerAddress: "",
-    date: new Date().toISOString().split("T")[0],
-    expiryDate: "",
-    notes: "",
-    terms: "Payment due within 30 days of acceptance.",
-    status: "draft" as const,
+    referenceNumber: editingQuotation?.referenceNumber || "",
+    customerName: editingQuotation?.customerName || "",
+    customerEmail: editingQuotation?.customerEmail || "",
+    customerCompany: editingQuotation?.customerCompany || "",
+    customerPhone: editingQuotation?.customerPhone || "",
+    customerAddress: editingQuotation?.customerAddress || "",
+    date: editingQuotation?.date || new Date().toISOString().split("T")[0],
+    expiryDate: editingQuotation?.expiryDate || "",
+    notes: editingQuotation?.notes || "",
+    terms:
+      editingQuotation?.terms || "Payment due within 30 days of acceptance.",
+    status: editingQuotation?.status || ("draft" as const),
   });
 
-  const [items, setItems] = useState<QuotationItem[]>([]);
+  const [items, setItems] = useState<QuotationItem[]>(
+    editingQuotation?.items || []
+  );
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
@@ -203,6 +208,17 @@ export const CreateQuotation: React.FC<CreateQuotationProps> = ({
       console.log("Duplicating quotation:", duplicateFromId);
     }
   }, [templateId, duplicateFromId]);
+
+  // Handle pre-selected items from navigation (e.g., from Add to Quote)
+  useEffect(() => {
+    if (
+      editingQuotation?.items &&
+      editingQuotation.items.length > 0 &&
+      items.length === 0
+    ) {
+      setItems(editingQuotation.items);
+    }
+  }, [editingQuotation, items.length]);
 
   const addItem = () => {
     const newItem: QuotationItem = {
@@ -511,10 +527,12 @@ export const CreateQuotation: React.FC<CreateQuotationProps> = ({
               </motion.button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Create New Quotation
+                  {editingQuotation ? "Edit Quotation" : "Create New Quotation"}
                 </h1>
                 <p className="text-sm text-gray-600">
-                  {selectedTemplate
+                  {editingQuotation
+                    ? `Editing quotation: ${editingQuotation.referenceNumber}`
+                    : selectedTemplate
                     ? `Using template: ${selectedTemplate.name}`
                     : "Create a new quotation from scratch"}
                 </p>

@@ -44,10 +44,15 @@ import { SecuritySettings } from "./components/security-settings";
 import { QuotationsList } from "./components/quotations-list";
 import { AddClient } from "./components/add-client";
 import { AddProduct } from "./components/add-product";
+import { PendingApprovals } from "./components/pending-approvals";
+import { CookiePolicy } from "./components/footer-pages/cookie-policy";
+import { GdprCompliance } from "./components/footer-pages/gdpr-compliance";
+import { Security } from "./components/footer-pages/security";
 import "./App.css";
 
 function App() {
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [navigationData, setNavigationData] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -62,6 +67,11 @@ function App() {
     setIsAuthenticated(false);
     localStorage.removeItem("quotemanager_user");
     setActiveSection("login");
+  };
+
+  const handleNavigation = (section: string, data?: any) => {
+    setActiveSection(section);
+    setNavigationData(data);
   };
 
   // Check for existing session on app load
@@ -185,9 +195,14 @@ function App() {
 
       // Quotations
       case "quotations-list":
-        return <QuotationsList onNavigate={setActiveSection} />;
+        return <QuotationsList onNavigate={handleNavigation} />;
       case "quotations-create":
-        return <CreateQuotation onNavigate={setActiveSection} />;
+        return (
+          <CreateQuotation
+            onNavigate={handleNavigation}
+            editingQuotation={navigationData}
+          />
+        );
       case "quotations-templates":
         return <QuotationTemplates onNavigate={setActiveSection} />;
       case "quotations-approval":
@@ -195,9 +210,14 @@ function App() {
 
       // Customers
       case "customers-list":
-        return <ClientsPage onNavigate={setActiveSection} />;
+        return <ClientsPage onNavigate={handleNavigation} />;
       case "add-client":
-        return <AddClient onNavigate={setActiveSection} />;
+        return (
+          <AddClient
+            onNavigate={handleNavigation}
+            editingClient={navigationData}
+          />
+        );
       case "customers-segments":
         return <CustomerSegments onNavigate={setActiveSection} />;
       case "customers-portal":
@@ -205,9 +225,14 @@ function App() {
 
       // Products
       case "products-catalog":
-        return <ProductsPage onNavigate={setActiveSection} />;
+        return <ProductsPage onNavigate={handleNavigation} />;
       case "add-product":
-        return <AddProduct onNavigate={setActiveSection} />;
+        return (
+          <AddProduct
+            onNavigate={handleNavigation}
+            editingProduct={navigationData}
+          />
+        );
       case "products-pricing":
         return <ProductCatalog onNavigate={setActiveSection} />;
       case "products-inventory":
@@ -215,25 +240,7 @@ function App() {
 
       // Workflow
       case "workflow-approvals":
-        return (
-          <ComingSoon
-            title="Pending Approvals"
-            description="Centralized approval queue with real-time notifications, batch processing, and detailed approval tracking for efficient workflow management."
-            category="Workflow"
-            priority="high"
-            expectedDate="Q1 2024"
-            features={[
-              "Centralized approval queue",
-              "Real-time notifications",
-              "Batch approval processing",
-              "Approval delegation",
-              "Mobile approval support",
-              "Approval comments and notes",
-              "Escalation management",
-              "SLA tracking and alerts",
-            ]}
-          />
-        );
+        return <PendingApprovals onNavigate={setActiveSection} />;
       case "workflow-rules":
         return <WorkflowRules onNavigate={setActiveSection} />;
       case "workflow-history":
@@ -372,28 +379,11 @@ function App() {
       case "terms-of-service":
         return <TermsOfService onNavigate={setActiveSection} />;
       case "cookie-policy":
-        return (
-          <div className="text-center py-20">
-            <h1 className="text-3xl font-bold text-gray-900">Cookie Policy</h1>
-            <p className="text-gray-600 mt-4">Coming Soon</p>
-          </div>
-        );
+        return <CookiePolicy onNavigate={setActiveSection} />;
       case "gdpr-compliance":
-        return (
-          <div className="text-center py-20">
-            <h1 className="text-3xl font-bold text-gray-900">
-              GDPR Compliance
-            </h1>
-            <p className="text-gray-600 mt-4">Coming Soon</p>
-          </div>
-        );
+        return <GdprCompliance onNavigate={setActiveSection} />;
       case "security":
-        return (
-          <div className="text-center py-20">
-            <h1 className="text-3xl font-bold text-gray-900">Security</h1>
-            <p className="text-gray-600 mt-4">Coming Soon</p>
-          </div>
-        );
+        return <Security onNavigate={setActiveSection} />;
 
       default:
         return <Dashboard />;

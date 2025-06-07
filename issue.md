@@ -61,3 +61,6 @@ Consider adding an error boundary to your tree to customize error handling behav
 Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
 
 ---
+
+❌ System Integrations - Need at least 2 working integrations
+❌ User Management - Needs to be fully functional

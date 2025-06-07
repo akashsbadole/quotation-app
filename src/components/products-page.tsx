@@ -107,11 +107,35 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onNavigate }) => {
     onNavigate?.("add-product");
   };
 
-  const handleImportProducts = () => {
-    setShowImportModal(true);
+  const handleEditProduct = (product: any) => {
+    onNavigate?.("add-product", product);
   };
 
-  const handleEditProduct = (product: any) => {
+  const handleImportProducts = () => {
+    // Create a file input element
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,.xlsx,.xls";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        // Simulate CSV import
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const csvData = event.target?.result as string;
+          // Parse CSV and add products
+          console.log("Importing CSV data:", csvData);
+          alert(
+            `Successfully imported products from ${file.name}!\n\nIn a real application, this would parse the CSV file and add the products to the database.`
+          );
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  };
+
+  const handleEditProductModal = (product: any) => {
     setSelectedProduct(product);
     setNewProduct({
       name: product.name,
@@ -126,7 +150,19 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onNavigate }) => {
 
   const handleAddToQuote = (product: any) => {
     // Navigate to create quotation with pre-selected product
-    onNavigate?.(`quotations-create?product=${product.id}`);
+    const quotationData = {
+      items: [
+        {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          quantity: 1,
+          unitPrice: product.price,
+          total: product.price,
+        },
+      ],
+    };
+    onNavigate?.("quotations-create", quotationData);
   };
 
   const handleSaveProduct = () => {
@@ -280,11 +316,13 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onNavigate }) => {
                   Add to Quote
                 </motion.button>
                 <motion.button
-                  className="px-3 py-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleEditProduct(product)}
+                  title="Edit Product"
                 >
-                  <Icon icon="lucide:more-horizontal" />
+                  <Icon icon="lucide:edit" />
                 </motion.button>
               </div>
             </div>
