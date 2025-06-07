@@ -10,6 +10,99 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================================================
+// CORE BUSINESS MODELS
+// ============================================================================
+
+// Enums for better type safety
+enum QuotationStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CONVERTED
+  CANCELLED
+}
+
+enum ProductType {
+  PRODUCT
+  SERVICE
+  SUBSCRIPTION
+  BUNDLE
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  SALES_REP
+  VIEWER
+  APPROVER
+}
+
+enum CommunicationType {
+  EMAIL
+  SMS
+  PHONE
+  MEETING
+  NOTE
+  SYSTEM
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ESCALATED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  TIERED
+  VOLUME
+}
+
+enum TaxType {
+  INCLUSIVE
+  EXCLUSIVE
+  EXEMPT
+}
+
+enum DocumentType {
+  QUOTATION
+  PROPOSAL
+  CONTRACT
+  ATTACHMENT
+  SIGNATURE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum IntegrationStatus {
+  ACTIVE
+  INACTIVE
+  ERROR
+  PENDING
+}
+
+enum IntegrationType {
+  CRM
+  ACCOUNTING
+  EMAIL
+  STORAGE
+  COMMUNICATION
+  ANALYTICS
+}
+
 model Client {
   id        String   @id @default(cuid())
   name      String
@@ -38,6 +131,28 @@ model Client {
   status          String   @default("active") // "active", "inactive", "suspended"
   lastContactDate DateTime?
   nextFollowUp    DateTime?
+  assignedTo      String?  // User ID
+  leadSource      String?
+  tags            String?  // JSON array of tags
+  customFields    String?  // JSON object for custom fields
+
+  // Additional CRM features
+  parentClientId  String?  // For client hierarchies
+  billingAddress  String?
+  shippingAddress String?
+  primaryContact  String?
+  secondaryContact String?
+  accountManager  String?
+  riskLevel       String?  @default("low") // "low", "medium", "high"
+  lifetimeValue   Float?   @default(0)
+  acquisitionCost Float?   @default(0)
+  satisfactionScore Int?   // 1-10 scale
+
+  // Portal access
+  portalEnabled   Boolean  @default(false)
+  portalUsername  String?  @unique
+  portalPassword  String?  // Hashed
+  lastPortalLogin DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -47,6 +162,11 @@ model Client {
   communications    Communication[]
   pricingAgreements PricingAgreement[]
   approvals         QuotationApproval[]
+  activities        ClientActivity[]
+  documents         ClientDocument[]
+  parentClient      Client?  @relation("ClientHierarchy", fields: [parentClientId], references: [id])
+  childClients      Client[] @relation("ClientHierarchy")
+  portalAccess      CustomerPortalAccess?
 
   @@map("clients")
 }
@@ -363,6 +483,8 @@ model User {
 
   // Relations
   notifications      Notification[]
+  profile            UserProfile?
+  roleAssignments    UserRoleAssignment[]
 
   @@map("users")
 }
@@ -507,6 +629,51 @@ model Integration {
   @@map("integrations")
 }
 
+model ClientActivity {
+  id          String   @id @default(cuid())
+  clientId    String
+  userId      String?  // User who performed the action
+  type        String   // "call", "email", "meeting", "note", "task"
+  subject     String?
+  description String
+  outcome     String?
+  nextAction  String?
+  scheduledAt DateTime?
+  completedAt DateTime?
+  priority    String   @default("medium") // "low", "medium", "high"
+  status      String   @default("completed") // "scheduled", "completed", "cancelled"
+  metadata    String?  // JSON string for additional data
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_activities")
+}
+
+model ClientDocument {
+  id          String   @id @default(cuid())
+  clientId    String
+  name        String
+  type        String   // "contract", "agreement", "certificate", "other"
+  category    String?
+  url         String
+  size        Int?     // File size in bytes
+  mimeType    String?
+  version     Int      @default(1)
+  isConfidential Boolean @default(false)
+  expiryDate  DateTime?
+  uploadedBy  String?  // User ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_documents")
+}
+
 model Analytics {
   id          String   @id @default(cuid())
   type        String   // "conversion", "performance", "revenue"
@@ -546,6 +713,162 @@ model CustomFieldValue {
   field       CustomField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
   @@map("custom_field_values")
+}
+
+// ============================================================================
+// NEW FEATURE MODELS
+// ============================================================================
+
+// Customer Portal Models
+model CustomerPortalAccess {
+  id              String    @id @default(cuid())
+  clientId        String    @unique
+  username        String    @unique
+  passwordHash    String
+  isActive        Boolean   @default(true)
+  lastLogin       DateTime?
+  loginAttempts   Int       @default(0)
+  lockedUntil     DateTime?
+  resetToken      String?
+  resetTokenExpiry DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  sessions        PortalSession[]
+
+  @@map("customer_portal_access")
+}
+
+model PortalSession {
+  id              String    @id @default(cuid())
+  portalAccessId  String
+  sessionToken    String    @unique
+  ipAddress       String?
+  userAgent       String?
+  isActive        Boolean   @default(true)
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  portalAccess    CustomerPortalAccess @relation(fields: [portalAccessId], references: [id], onDelete: Cascade)
+
+  @@map("portal_sessions")
+}
+
+// Financial Reports Models
+model FinancialReport {
+  id              String    @id @default(cuid())
+  name            String
+  type            String    // "revenue", "profit_loss", "expense", "forecast"
+  period          String    // "monthly", "quarterly", "yearly"
+  startDate       DateTime
+  endDate         DateTime
+  data            String    // JSON data for the report
+  generatedBy     String?   // User ID
+  isScheduled     Boolean   @default(false)
+  scheduleConfig  String?   // JSON for schedule configuration
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("financial_reports")
+}
+
+model RevenueMetric {
+  id              String    @id @default(cuid())
+  date            DateTime
+  totalRevenue    Float     @default(0)
+  quotationCount  Int       @default(0)
+  conversionRate  Float     @default(0)
+  averageValue    Float     @default(0)
+  currency        String    @default("USD")
+  createdAt       DateTime  @default(now())
+
+  @@map("revenue_metrics")
+}
+
+// User Management Models
+model UserProfile {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  firstName       String
+  lastName        String
+  avatar          String?
+  phone           String?
+  timezone        String    @default("UTC")
+  language        String    @default("en")
+  preferences     String?   // JSON preferences
+  bio             String?
+  socialLinks     String?   // JSON social media links
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// System Integrations Models
+model Integration {
+  id              String    @id @default(cuid())
+  name            String
+  type            String    // "CRM", "ACCOUNTING", "EMAIL", "STORAGE"
+  provider        String    // "salesforce", "hubspot", "quickbooks", etc.
+  description     String?
+  iconUrl         String?
+  configSchema    String    // JSON schema for configuration
+  isActive        Boolean   @default(true)
+  isOfficial      Boolean   @default(false)
+  version         String    @default("1.0.0")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  connections     IntegrationConnection[]
+
+  @@map("integrations")
+}
+
+model IntegrationConnection {
+  id              String    @id @default(cuid())
+  integrationId   String
+  name            String
+  status          String    @default("PENDING") // "ACTIVE", "INACTIVE", "ERROR", "PENDING"
+  config          String    // JSON configuration
+  credentials     String?   // Encrypted credentials
+  lastSync        DateTime?
+  syncFrequency   String?   // "hourly", "daily", "weekly"
+  errorMessage    String?
+  isActive        Boolean   @default(true)
+  createdBy       String?   // User ID
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  integration     Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  syncLogs        IntegrationSyncLog[]
+
+  @@map("integration_connections")
+}
+
+model IntegrationSyncLog {
+  id              String    @id @default(cuid())
+  connectionId    String
+  status          String    // "success", "error", "warning"
+  recordsProcessed Int      @default(0)
+  recordsSuccess  Int       @default(0)
+  recordsError    Int       @default(0)
+  errorDetails    String?   // JSON error details
+  startedAt       DateTime
+  completedAt     DateTime?
+  duration        Int?      // Duration in milliseconds
+
+  // Relations
+  connection      IntegrationConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@map("integration_sync_logs")
 }
 
 // Note: SQLite doesn't support enums, so we use strings instead

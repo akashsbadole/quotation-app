@@ -11,6 +11,9 @@ export const QuotationsPage: React.FC<QuotationsPageProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedQuotation, setSelectedQuotation] = useState<any>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const quotations = [
     {
@@ -98,6 +101,22 @@ export const QuotationsPage: React.FC<QuotationsPageProps> = ({
       statusFilter === "all" || quotation.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const handleViewQuotation = (quotation: any) => {
+    setSelectedQuotation(quotation);
+    setShowViewModal(true);
+  };
+
+  const handleEditQuotation = (quotation: any) => {
+    setSelectedQuotation(quotation);
+    // Navigate to edit page with quotation data
+    onNavigate?.(`quotations-edit-${quotation.id}`);
+  };
+
+  const handleMoreActions = (quotation: any) => {
+    // Show dropdown menu with more actions
+    console.log("More actions for quotation:", quotation.id);
+  };
 
   return (
     <div className="space-y-6">
@@ -231,6 +250,7 @@ export const QuotationsPage: React.FC<QuotationsPageProps> = ({
                 className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleViewQuotation(quotation)}
               >
                 View
               </motion.button>
@@ -238,6 +258,7 @@ export const QuotationsPage: React.FC<QuotationsPageProps> = ({
                 className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleEditQuotation(quotation)}
               >
                 Edit
               </motion.button>
@@ -245,6 +266,7 @@ export const QuotationsPage: React.FC<QuotationsPageProps> = ({
                 className="px-3 py-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                onClick={() => handleMoreActions(quotation)}
               >
                 <Icon icon="lucide:more-horizontal" />
               </motion.button>
@@ -274,6 +296,119 @@ export const QuotationsPage: React.FC<QuotationsPageProps> = ({
           >
             Create Quotation
           </motion.button>
+        </div>
+      )}
+
+      {/* View Quotation Modal */}
+      {showViewModal && selectedQuotation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Quotation Details - {selectedQuotation.id}
+                </h2>
+                <motion.button
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowViewModal(false)}
+                >
+                  <Icon icon="lucide:x" className="text-xl" />
+                </motion.button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Client
+                    </label>
+                    <p className="text-lg text-gray-900">
+                      {selectedQuotation.client}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Amount
+                    </label>
+                    <p className="text-2xl font-bold text-green-600">
+                      ${selectedQuotation.amount.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <span
+                      className={`inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(
+                        selectedQuotation.status
+                      )}`}
+                    >
+                      <Icon
+                        icon={getStatusIcon(selectedQuotation.status)}
+                        className="w-4 h-4 mr-2"
+                      />
+                      {selectedQuotation.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Created Date
+                    </label>
+                    <p className="text-lg text-gray-900">
+                      {selectedQuotation.date}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Valid Until
+                    </label>
+                    <p className="text-lg text-gray-900">
+                      {selectedQuotation.validUntil}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Items Count
+                    </label>
+                    <p className="text-lg text-gray-900">
+                      {selectedQuotation.items} items
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-end space-x-3">
+                <motion.button
+                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowViewModal(false)}
+                >
+                  Close
+                </motion.button>
+                <motion.button
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleEditQuotation(selectedQuotation);
+                  }}
+                >
+                  Edit Quotation
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>

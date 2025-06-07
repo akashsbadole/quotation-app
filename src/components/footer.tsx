@@ -2,48 +2,52 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigate?: (section: string) => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const currentYear = new Date().getFullYear();
 
   const footerSections = [
     {
       title: "Product",
       links: [
-        { name: "Features", href: "#" },
-        { name: "Pricing", href: "#" },
-        { name: "API Documentation", href: "#" },
-        { name: "Integrations", href: "#" },
-        { name: "Mobile Apps", href: "#" },
+        { name: "Features", section: "features" },
+        { name: "Pricing", section: "pricing" },
+        { name: "API Documentation", section: "api-documentation" },
+        { name: "Integrations", section: "integrations" },
+        { name: "Mobile Apps", section: "mobile-apps" },
       ],
     },
     {
       title: "Company",
       links: [
-        { name: "About Us", href: "#" },
-        { name: "Careers", href: "#" },
-        { name: "Press", href: "#" },
-        { name: "Partners", href: "#" },
-        { name: "Contact", href: "#" },
+        { name: "About Us", section: "about-us" },
+        { name: "Careers", section: "careers" },
+        { name: "Press", section: "press" },
+        { name: "Partners", section: "partners" },
+        { name: "Contact", section: "contact" },
       ],
     },
     {
       title: "Resources",
       links: [
-        { name: "Help Center", href: "#" },
-        { name: "User Guide", href: "#" },
-        { name: "Webinars", href: "#" },
-        { name: "Case Studies", href: "#" },
-        { name: "Blog", href: "#" },
+        { name: "Help Center", section: "help-center" },
+        { name: "User Guide", section: "user-guide" },
+        { name: "Webinars", section: "webinars" },
+        { name: "Case Studies", section: "case-studies" },
+        { name: "Blog", section: "blog" },
       ],
     },
     {
       title: "Legal",
       links: [
-        { name: "Privacy Policy", href: "#" },
-        { name: "Terms of Service", href: "#" },
-        { name: "Cookie Policy", href: "#" },
-        { name: "GDPR Compliance", href: "#" },
-        { name: "Security", href: "#" },
+        { name: "Privacy Policy", section: "privacy-policy" },
+        { name: "Terms of Service", section: "terms-of-service" },
+        { name: "Cookie Policy", section: "cookie-policy" },
+        { name: "GDPR Compliance", section: "gdpr-compliance" },
+        { name: "Security", section: "security" },
       ],
     },
   ];
@@ -79,7 +83,7 @@ export const Footer: React.FC = () => {
                 </p>
               </div>
             </div>
-            <p className="text-sm sm:text-base text-gray-400 mb-6 max-w-md">
+            <p className="text-gray-400 mb-6 max-w-md text-[12px]">
               Streamline your quotation process with our comprehensive
               management system. Create, manage, and track quotations with ease
               while maintaining professional standards.
@@ -112,13 +116,13 @@ export const Footer: React.FC = () => {
               <ul className="space-y-2">
                 {section.links.map((link) => (
                   <li key={link.name}>
-                    <motion.a
-                      href={link.href}
-                      className="text-gray-400 hover:text-white transition-colors duration-200 text-sm"
+                    <motion.button
+                      onClick={() => onNavigate?.(link.section)}
+                      className="text-gray-400 hover:text-white transition-colors duration-200 text-[12px] text-left"
                       whileHover={{ x: 4 }}
                     >
                       {link.name}
-                    </motion.a>
+                    </motion.button>
                   </li>
                 ))}
               </ul>
@@ -133,7 +137,7 @@ export const Footer: React.FC = () => {
               <h4 className="text-base sm:text-lg font-semibold mb-2">
                 Stay Updated
               </h4>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-[12px]">
                 Get the latest updates, tips, and insights delivered to your
                 inbox.
               </p>

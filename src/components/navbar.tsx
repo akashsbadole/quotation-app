@@ -1,19 +1,24 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
+import { NotificationBell, NotificationCenter } from "./notification-center";
 
 interface NavbarProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
+  currentUser?: any;
+  onLogout?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeSection,
   setActiveSection,
+  currentUser,
+  onLogout,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // For demo purposes
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const navigationItems = [
     {
@@ -162,7 +167,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex justify-between items-center h-14 sm:h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
+            <motion.button
+              className="flex-shrink-0 flex items-center hover:opacity-80 transition-opacity duration-200"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setActiveSection("dashboard")}
+              title="Go to Dashboard"
+            >
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
                 <Icon
                   icon="lucide:file-text"
@@ -177,7 +188,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Professional Quotation System
                 </p>
               </div>
-            </div>
+            </motion.button>
           </div>
 
           {/* Mobile menu button and user menu */}
@@ -212,10 +223,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          Admin User
+                          {currentUser?.name || "Admin User"}
                         </p>
                         <p className="text-xs text-gray-500">
-                          admin@company.com
+                          {currentUser?.email || "admin@company.com"}
                         </p>
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
                           <Icon
@@ -274,9 +285,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-3"
                       whileHover={{ x: 4 }}
                       onClick={() => {
-                        setIsLoggedIn(false);
                         setIsUserMenuOpen(false);
-                        // Add logout logic here
+                        onLogout?.();
                       }}
                     >
                       <Icon icon="lucide:log-out" className="text-red-500" />
@@ -358,15 +368,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* User Menu - Desktop */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
             {/* Notifications */}
-            <motion.button
-              className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors duration-200 relative"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              title="Notifications"
-            >
-              <Icon icon="lucide:bell" className="text-xl" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-            </motion.button>
+            <NotificationBell onClick={() => setIsNotificationOpen(true)} />
 
             {/* Search */}
             <motion.button
@@ -408,10 +410,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          Admin User
+                          {currentUser?.name || "Admin User"}
                         </p>
                         <p className="text-xs text-gray-500">
-                          admin@company.com
+                          {currentUser?.email || "admin@company.com"}
                         </p>
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
                           <Icon
@@ -470,9 +472,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-3"
                       whileHover={{ x: 4 }}
                       onClick={() => {
-                        setIsLoggedIn(false);
                         setIsUserMenuOpen(false);
-                        // Add logout logic here
+                        onLogout?.();
                       }}
                     >
                       <Icon icon="lucide:log-out" className="text-red-500" />
@@ -588,6 +589,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </motion.div>
       )}
+
+      {/* Notification Center */}
+      <NotificationCenter
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      />
     </nav>
   );
 };

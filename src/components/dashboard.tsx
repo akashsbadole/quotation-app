@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
@@ -7,6 +7,65 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
+  const [isNavigating, setIsNavigating] = useState<string | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const handleQuickAction = async (action: string, route: string) => {
+    setIsNavigating(action);
+
+    // Add a small delay to show loading state
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    // Show success message
+    const actionNames = {
+      "create-quotation": "Opening Quotation Creator",
+      "manage-customers": "Loading Customer Management",
+      "product-catalog": "Opening Product Catalog",
+      "view-analytics": "Loading Analytics Dashboard",
+      "view-settings": "Opening Settings Panel",
+    };
+
+    setSuccessMessage(
+      actionNames[action as keyof typeof actionNames] || "Navigation successful"
+    );
+    setShowSuccessToast(true);
+
+    // Hide toast after 2 seconds
+    setTimeout(() => setShowSuccessToast(false), 2000);
+
+    onNavigate?.(route);
+    setIsNavigating(null);
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case "n":
+            event.preventDefault();
+            handleQuickAction("create-quotation", "quotations-create");
+            break;
+          case "u":
+            event.preventDefault();
+            handleQuickAction("manage-customers", "customers-list");
+            break;
+          case "p":
+            event.preventDefault();
+            handleQuickAction("product-catalog", "products-catalog");
+            break;
+          case ",":
+            event.preventDefault();
+            handleQuickAction("view-settings", "settings-dashboard");
+            break;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
   const stats = [
     {
       title: "Total Quotations",
@@ -303,37 +362,169 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-            Quick Actions
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+              Quick Actions
+            </h2>
+            <div className="text-xs text-gray-500 hidden sm:block">
+              Keyboard shortcuts: Ctrl+N, Ctrl+U, Ctrl+P, Ctrl+,
+            </div>
+          </div>
           <div className="space-y-3">
             <motion.button
-              className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center space-x-3 text-sm sm:text-base"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onNavigate?.("quotations-create")}
+              className={`w-full px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-3 text-sm sm:text-base ${
+                isNavigating === "create-quotation"
+                  ? "bg-blue-500 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              } text-white`}
+              whileHover={
+                isNavigating === "create-quotation" ? {} : { scale: 1.02 }
+              }
+              whileTap={
+                isNavigating === "create-quotation" ? {} : { scale: 0.98 }
+              }
+              onClick={() =>
+                handleQuickAction("create-quotation", "quotations-create")
+              }
+              disabled={isNavigating === "create-quotation"}
             >
-              <Icon icon="lucide:plus" className="text-lg sm:text-xl" />
-              <span>Create New Quotation</span>
+              {isNavigating === "create-quotation" ? (
+                <Icon
+                  icon="lucide:loader-2"
+                  className="text-lg sm:text-xl animate-spin"
+                />
+              ) : (
+                <Icon icon="lucide:plus" className="text-lg sm:text-xl" />
+              )}
+              <span>
+                {isNavigating === "create-quotation"
+                  ? "Loading..."
+                  : "Create New Quotation"}
+              </span>
             </motion.button>
+
             <motion.button
-              className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center justify-center space-x-3 text-sm sm:text-base"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onNavigate?.("customers-list")}
+              className={`w-full px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-3 text-sm sm:text-base ${
+                isNavigating === "manage-customers"
+                  ? "bg-green-500 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700"
+              } text-white`}
+              whileHover={
+                isNavigating === "manage-customers" ? {} : { scale: 1.02 }
+              }
+              whileTap={
+                isNavigating === "manage-customers" ? {} : { scale: 0.98 }
+              }
+              onClick={() =>
+                handleQuickAction("manage-customers", "customers-list")
+              }
+              disabled={isNavigating === "manage-customers"}
             >
-              <Icon icon="lucide:users" className="text-lg sm:text-xl" />
-              <span>Manage Customers</span>
+              {isNavigating === "manage-customers" ? (
+                <Icon
+                  icon="lucide:loader-2"
+                  className="text-lg sm:text-xl animate-spin"
+                />
+              ) : (
+                <Icon icon="lucide:users" className="text-lg sm:text-xl" />
+              )}
+              <span>
+                {isNavigating === "manage-customers"
+                  ? "Loading..."
+                  : "Manage Customers"}
+              </span>
             </motion.button>
+
             <motion.button
-              className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center space-x-3 text-sm sm:text-base"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onNavigate?.("products-catalog")}
+              className={`w-full px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-3 text-sm sm:text-base ${
+                isNavigating === "product-catalog"
+                  ? "bg-purple-500 cursor-not-allowed"
+                  : "bg-purple-600 hover:bg-purple-700"
+              } text-white`}
+              whileHover={
+                isNavigating === "product-catalog" ? {} : { scale: 1.02 }
+              }
+              whileTap={
+                isNavigating === "product-catalog" ? {} : { scale: 0.98 }
+              }
+              onClick={() =>
+                handleQuickAction("product-catalog", "products-catalog")
+              }
+              disabled={isNavigating === "product-catalog"}
             >
-              <Icon icon="lucide:package" className="text-lg sm:text-xl" />
-              <span>Product Catalog</span>
+              {isNavigating === "product-catalog" ? (
+                <Icon
+                  icon="lucide:loader-2"
+                  className="text-lg sm:text-xl animate-spin"
+                />
+              ) : (
+                <Icon icon="lucide:package" className="text-lg sm:text-xl" />
+              )}
+              <span>
+                {isNavigating === "product-catalog"
+                  ? "Loading..."
+                  : "Product Catalog"}
+              </span>
             </motion.button>
+
+            {/* Additional Quick Actions */}
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <motion.button
+                className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 text-xs sm:text-sm ${
+                  isNavigating === "view-analytics"
+                    ? "bg-orange-400 cursor-not-allowed"
+                    : "bg-orange-500 hover:bg-orange-600"
+                } text-white`}
+                whileHover={
+                  isNavigating === "view-analytics" ? {} : { scale: 1.02 }
+                }
+                whileTap={
+                  isNavigating === "view-analytics" ? {} : { scale: 0.98 }
+                }
+                onClick={() =>
+                  handleQuickAction("view-analytics", "analytics-performance")
+                }
+                disabled={isNavigating === "view-analytics"}
+              >
+                {isNavigating === "view-analytics" ? (
+                  <Icon
+                    icon="lucide:loader-2"
+                    className="text-sm animate-spin"
+                  />
+                ) : (
+                  <Icon icon="lucide:bar-chart" className="text-sm" />
+                )}
+                <span>Analytics</span>
+              </motion.button>
+
+              <motion.button
+                className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 text-xs sm:text-sm ${
+                  isNavigating === "view-settings"
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gray-500 hover:bg-gray-600"
+                } text-white`}
+                whileHover={
+                  isNavigating === "view-settings" ? {} : { scale: 1.02 }
+                }
+                whileTap={
+                  isNavigating === "view-settings" ? {} : { scale: 0.98 }
+                }
+                onClick={() =>
+                  handleQuickAction("view-settings", "settings-dashboard")
+                }
+                disabled={isNavigating === "view-settings"}
+              >
+                {isNavigating === "view-settings" ? (
+                  <Icon
+                    icon="lucide:loader-2"
+                    className="text-sm animate-spin"
+                  />
+                ) : (
+                  <Icon icon="lucide:settings" className="text-sm" />
+                )}
+                <span>Settings</span>
+              </motion.button>
+            </div>
           </div>
         </div>
 
@@ -474,6 +665,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
         </div>
       </div>
+
+      {/* Success Toast Notification */}
+      {showSuccessToast && (
+        <motion.div
+          className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center space-x-2"
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 100 }}
+        >
+          <Icon icon="lucide:check-circle" className="text-lg" />
+          <span>{successMessage}</span>
+        </motion.div>
+      )}
     </div>
   );
 };

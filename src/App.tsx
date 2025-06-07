@@ -1,155 +1,217 @@
 import React, { useState } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { Navbar } from "./components/navbar";
 import { Footer } from "./components/footer";
 import { Dashboard } from "./components/dashboard";
-import { QuotationsPage } from "./components/quotations-page";
-import { QuotationCreate } from "./components/quotation-create";
+import { LoginPage } from "./components/login-page";
+import { SEO, seoConfigs } from "./components/seo";
+
+// Footer Pages
+import { ApiDocumentation } from "./components/footer-pages/api-documentation";
+import { MobileApps } from "./components/footer-pages/mobile-apps";
+import { AboutUs } from "./components/footer-pages/about-us";
+import { Careers } from "./components/footer-pages/careers";
+import { HelpCenter } from "./components/footer-pages/help-center";
+import { PrivacyPolicy } from "./components/footer-pages/privacy-policy";
+import { Contact } from "./components/footer-pages/contact";
+import { TermsOfService } from "./components/footer-pages/terms-of-service";
+import { Integrations } from "./components/footer-pages/integrations";
+import { CaseStudies } from "./components/footer-pages/case-studies";
+
+import { QuotationTemplates } from "./components/quotation-templates";
+import { ApprovalWorkflow } from "./components/approval-workflow";
+import { CustomerSegments } from "./components/customer-segments";
+import { PerformanceAnalytics } from "./components/performance-analytics";
+import { ProductCatalog } from "./components/product-catalog/product-catalog";
+import { SettingsDashboard } from "./components/settings/settings-dashboard";
+import { CustomerPortal } from "./components/customer-portal";
+import { FinancialReports } from "./components/financial-reports";
+import { UserManagement } from "./components/user-management";
+import { SystemIntegrations } from "./components/system-integrations";
+import { CreateQuotation } from "./components/create-quotation";
 import { ClientsPage } from "./components/clients-page";
 import { ProductsPage } from "./components/products-page";
+import { Features } from "./components/footer-pages/features";
+import { Pricing } from "./components/footer-pages/pricing";
 import { ComingSoon } from "./components/coming-soon";
+import { InventoryManagement } from "./components/inventory-management";
+import { WorkflowRules } from "./components/workflow-rules";
+import { SalesForecasting } from "./components/sales-forecasting";
+import { GeneralSettings } from "./components/general-settings";
+import { ApprovalHistory } from "./components/approval-history";
+import { WorkflowSettings } from "./components/workflow-settings";
+import { SecuritySettings } from "./components/security-settings";
+import { QuotationsList } from "./components/quotations-list";
+import { AddClient } from "./components/add-client";
+import { AddProduct } from "./components/add-product";
 import "./App.css";
 
 function App() {
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  const handleLogin = (userData: any) => {
+    setCurrentUser(userData);
+    setIsAuthenticated(true);
+    localStorage.setItem("quotemanager_user", JSON.stringify(userData));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem("quotemanager_user");
+    setActiveSection("login");
+  };
+
+  // Check for existing session on app load
+  React.useEffect(() => {
+    const savedUser = localStorage.getItem("quotemanager_user");
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setCurrentUser(userData);
+        setIsAuthenticated(true);
+      } catch (error) {
+        localStorage.removeItem("quotemanager_user");
+      }
+    } else {
+      setActiveSection("login");
+    }
+  }, []);
+
+  const getSEOConfig = () => {
+    switch (activeSection) {
+      case "login":
+        return seoConfigs.login;
+      case "dashboard":
+        return seoConfigs.dashboard;
+      case "quotations-list":
+      case "quotations-create":
+      case "quotations-templates":
+      case "quotations-approval":
+        return seoConfigs.quotations;
+      case "customers-list":
+      case "customers-segments":
+      case "customers-portal":
+        return seoConfigs.customers;
+      case "products-catalog":
+      case "products-pricing":
+      case "products-inventory":
+        return seoConfigs.products;
+      case "analytics-performance":
+      case "analytics-financial":
+      case "analytics-forecasting":
+        return seoConfigs.analytics;
+      case "settings":
+      case "settings-list":
+      case "settings-general":
+      case "settings-users":
+      case "settings-security":
+        return seoConfigs.settings;
+      case "features":
+        return seoConfigs.features;
+      case "pricing":
+        return seoConfigs.pricing;
+
+      // Footer Pages SEO
+      case "api-documentation":
+        return {
+          title: "API Documentation - QuoteManager",
+          description:
+            "Complete API documentation for QuoteManager. Integrate quotation management into your applications with our RESTful API.",
+          keywords:
+            "API documentation, REST API, quotation API, integration, developers",
+          url: "/api-documentation",
+        };
+      case "mobile-apps":
+        return {
+          title: "Mobile Apps - QuoteManager",
+          description:
+            "Download QuoteManager mobile apps for iOS and Android. Create quotations, manage customers, and grow your business on the go.",
+          keywords:
+            "mobile app, iOS app, Android app, quotation app, business mobile",
+          url: "/mobile-apps",
+        };
+      case "about-us":
+        return {
+          title: "About Us - QuoteManager",
+          description:
+            "Learn about QuoteManager's mission to revolutionize quotation management. Meet our team and discover our journey.",
+          keywords: "about QuoteManager, company story, team, mission, values",
+          url: "/about-us",
+        };
+      case "careers":
+        return {
+          title: "Careers - QuoteManager",
+          description:
+            "Join the QuoteManager team! Explore exciting career opportunities in engineering, marketing, sales, and more.",
+          keywords:
+            "careers, jobs, QuoteManager jobs, software engineer jobs, remote work",
+          url: "/careers",
+        };
+      case "help-center":
+        return {
+          title: "Help Center - QuoteManager",
+          description:
+            "Find answers to your questions about QuoteManager. Browse our comprehensive help articles and tutorials.",
+          keywords:
+            "help center, support, tutorials, QuoteManager help, documentation",
+          url: "/help-center",
+        };
+      case "privacy-policy":
+        return {
+          title: "Privacy Policy - QuoteManager",
+          description:
+            "Learn how QuoteManager collects, uses, and protects your personal information. Our comprehensive privacy policy.",
+          keywords:
+            "privacy policy, data protection, GDPR, personal information, data security",
+          url: "/privacy-policy",
+        };
+
+      default:
+        return seoConfigs.home;
+    }
+  };
 
   const renderContent = () => {
     switch (activeSection) {
+      case "login":
+        return (
+          <LoginPage onLogin={handleLogin} onNavigate={setActiveSection} />
+        );
       case "dashboard":
         return <Dashboard onNavigate={setActiveSection} />;
 
       // Quotations
       case "quotations-list":
-        return <QuotationsPage onNavigate={setActiveSection} />;
+        return <QuotationsList onNavigate={setActiveSection} />;
       case "quotations-create":
-        return <QuotationCreate />;
+        return <CreateQuotation onNavigate={setActiveSection} />;
       case "quotations-templates":
-        return (
-          <ComingSoon
-            title="Quotation Templates"
-            description="Create and manage professional quotation templates with customizable layouts, automated calculations, and industry-specific designs."
-            category="Templates"
-            priority="high"
-            expectedDate="Q2 2024"
-            features={[
-              "Drag & drop template builder",
-              "Industry-specific templates",
-              "Custom branding options",
-              "Automated field population",
-              "Multi-language support",
-              "Template versioning",
-              "Approval workflows for templates",
-              "Template analytics and usage tracking",
-            ]}
-          />
-        );
+        return <QuotationTemplates onNavigate={setActiveSection} />;
       case "quotations-approval":
-        return (
-          <ComingSoon
-            title="Approval Workflow"
-            description="Streamline your quotation approval process with automated workflows, multi-level approvals, and real-time notifications."
-            category="Workflow"
-            priority="high"
-            expectedDate="Q1 2024"
-            features={[
-              "Multi-level approval chains",
-              "Role-based approval rules",
-              "Automated routing based on amount",
-              "Email and SMS notifications",
-              "Approval history tracking",
-              "Escalation procedures",
-              "Bulk approval capabilities",
-              "Integration with HR systems",
-            ]}
-          />
-        );
+        return <ApprovalWorkflow onNavigate={setActiveSection} />;
 
       // Customers
       case "customers-list":
         return <ClientsPage onNavigate={setActiveSection} />;
+      case "add-client":
+        return <AddClient onNavigate={setActiveSection} />;
       case "customers-segments":
-        return (
-          <ComingSoon
-            title="Customer Segments"
-            description="Organize and target your customers with intelligent segmentation based on behavior, purchase history, and custom criteria."
-            category="CRM"
-            priority="medium"
-            expectedDate="Q3 2024"
-            features={[
-              "Behavioral segmentation",
-              "Purchase history analysis",
-              "Custom segment criteria",
-              "Automated segment updates",
-              "Segment performance tracking",
-              "Targeted marketing campaigns",
-              "Export and integration capabilities",
-              "Visual segment analytics",
-            ]}
-          />
-        );
+        return <CustomerSegments onNavigate={setActiveSection} />;
       case "customers-portal":
-        return (
-          <ComingSoon
-            title="Customer Portal"
-            description="Empower your customers with a self-service portal to view quotations, track orders, and manage their account information."
-            category="Portal"
-            priority="high"
-            expectedDate="Q2 2024"
-            features={[
-              "Self-service quotation viewing",
-              "Order tracking and history",
-              "Account management",
-              "Document downloads",
-              "Communication center",
-              "Payment status tracking",
-              "Support ticket system",
-              "Mobile-responsive design",
-            ]}
-          />
-        );
+        return <CustomerPortal onNavigate={setActiveSection} />;
 
       // Products
       case "products-catalog":
         return <ProductsPage onNavigate={setActiveSection} />;
+      case "add-product":
+        return <AddProduct onNavigate={setActiveSection} />;
       case "products-pricing":
-        return (
-          <ComingSoon
-            title="Pricing Matrix"
-            description="Advanced pricing management with dynamic pricing rules, volume discounts, customer-specific pricing, and automated price updates."
-            category="Pricing"
-            priority="high"
-            expectedDate="Q2 2024"
-            features={[
-              "Dynamic pricing rules",
-              "Volume discount tiers",
-              "Customer-specific pricing",
-              "Competitor price tracking",
-              "Automated price updates",
-              "Margin protection rules",
-              "Currency conversion",
-              "Price approval workflows",
-            ]}
-          />
-        );
+        return <ProductCatalog onNavigate={setActiveSection} />;
       case "products-inventory":
-        return (
-          <ComingSoon
-            title="Inventory Management"
-            description="Real-time inventory tracking with automated stock alerts, supplier management, and integration with quotation availability checks."
-            category="Inventory"
-            priority="medium"
-            expectedDate="Q3 2024"
-            features={[
-              "Real-time stock tracking",
-              "Automated reorder points",
-              "Supplier management",
-              "Stock movement history",
-              "Barcode scanning",
-              "Multi-location support",
-              "Integration with quotations",
-              "Inventory valuation reports",
-            ]}
-          />
-        );
+        return <InventoryManagement onNavigate={setActiveSection} />;
 
       // Workflow
       case "workflow-approvals":
@@ -173,215 +235,164 @@ function App() {
           />
         );
       case "workflow-rules":
-        return (
-          <ComingSoon
-            title="Workflow Rules"
-            description="Configure custom approval workflows with conditional logic, automated routing, and flexible rule-based processing for your business needs."
-            category="Workflow"
-            priority="medium"
-            expectedDate="Q2 2024"
-            features={[
-              "Visual workflow designer",
-              "Conditional logic rules",
-              "Automated routing",
-              "Role-based assignments",
-              "Time-based triggers",
-              "Custom approval criteria",
-              "Workflow templates",
-              "Testing and simulation tools",
-            ]}
-          />
-        );
+        return <WorkflowRules onNavigate={setActiveSection} />;
       case "workflow-history":
-        return (
-          <ComingSoon
-            title="Approval History"
-            description="Comprehensive audit trail of all approval activities with detailed logs, performance metrics, and compliance reporting capabilities."
-            category="Workflow"
-            priority="low"
-            expectedDate="Q3 2024"
-            features={[
-              "Complete audit trail",
-              "Approval performance metrics",
-              "Compliance reporting",
-              "Historical trend analysis",
-              "Export capabilities",
-              "Advanced search filters",
-              "User activity tracking",
-              "Regulatory compliance tools",
-            ]}
-          />
-        );
+        return <ApprovalHistory onNavigate={setActiveSection} />;
+      case "workflow-settings":
+        return <WorkflowSettings onNavigate={setActiveSection} />;
 
       // Analytics
       case "analytics-performance":
-        return (
-          <ComingSoon
-            title="Performance Analytics"
-            description="Get deep insights into your quotation performance with advanced analytics, conversion tracking, and team productivity metrics."
-            category="Analytics"
-            priority="medium"
-            expectedDate="Q3 2024"
-            features={[
-              "Conversion rate analysis",
-              "Team performance dashboards",
-              "Response time tracking",
-              "Win/loss analysis",
-              "Customer behavior insights",
-              "Product performance metrics",
-              "Seasonal trend analysis",
-              "Custom KPI tracking",
-            ]}
-          />
-        );
+        return <PerformanceAnalytics onNavigate={setActiveSection} />;
       case "analytics-financial":
-        return (
-          <ComingSoon
-            title="Financial Reports"
-            description="Comprehensive financial reporting with revenue analysis, profit margins, and automated financial insights for better business decisions."
-            category="Analytics"
-            priority="high"
-            expectedDate="Q2 2024"
-            features={[
-              "Revenue trend analysis",
-              "Profit margin tracking",
-              "Cost analysis reports",
-              "Budget vs actual comparisons",
-              "Cash flow projections",
-              "Tax reporting integration",
-              "Multi-currency reporting",
-              "Automated financial alerts",
-            ]}
-          />
-        );
+        return <FinancialReports onNavigate={setActiveSection} />;
       case "analytics-forecasting":
-        return (
-          <ComingSoon
-            title="Sales Forecasting"
-            description="AI-powered sales forecasting with predictive analytics to help you plan ahead and make data-driven business decisions."
-            category="AI"
-            priority="medium"
-            expectedDate="Q4 2024"
-            features={[
-              "AI-powered predictions",
-              "Seasonal pattern recognition",
-              "Pipeline probability scoring",
-              "Market trend analysis",
-              "Scenario planning tools",
-              "Confidence intervals",
-              "Historical data analysis",
-              "Integration with CRM data",
-            ]}
-          />
-        );
+        return <SalesForecasting onNavigate={setActiveSection} />;
 
       // Integrations
       case "integrations":
+        return <SystemIntegrations onNavigate={setActiveSection} />;
+
+      // Footer Pages
+      case "features":
+        return <Features onNavigate={setActiveSection} />;
+      case "pricing":
+        return <Pricing onNavigate={setActiveSection} />;
+      case "api-documentation":
+      case "mobile-apps":
+      case "about-us":
+      case "careers":
+      case "press":
+      case "partners":
+      case "contact":
+      case "help-center":
+      case "user-guide":
+      case "webinars":
+      case "case-studies":
+      case "blog":
+      case "privacy-policy":
+      case "terms-of-service":
+      case "cookie-policy":
+      case "gdpr-compliance":
+      case "security":
         return (
           <ComingSoon
-            title="System Integrations"
-            description="Seamlessly connect your quotation system with popular CRM, ERP, accounting, and business tools for a unified workflow."
-            category="Integration"
-            priority="high"
-            expectedDate="Q1 2024"
+            title={activeSection
+              .split("-")
+              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(" ")}
+            description={`The ${activeSection
+              .split("-")
+              .join(
+                " "
+              )} page is currently under development. We're working hard to bring you this feature soon.`}
+            category="Information"
+            priority="medium"
+            expectedDate="Q2 2024"
             features={[
-              "Salesforce CRM integration",
-              "HubSpot connectivity",
-              "QuickBooks accounting sync",
-              "Xero financial integration",
-              "SAP ERP connection",
-              "Microsoft Dynamics 365",
-              "Zapier automation",
-              "Custom API endpoints",
-              "Real-time data synchronization",
-              "Webhook support",
-              "Single sign-on (SSO)",
-              "Data mapping tools",
+              "Comprehensive information",
+              "User-friendly interface",
+              "Mobile responsive design",
+              "Regular updates",
             ]}
           />
         );
 
       // Settings
       case "settings-general":
-        return (
-          <ComingSoon
-            title="General Settings"
-            description="Configure general system settings including company information, branding, localization, and basic preferences."
-            category="Settings"
-            priority="medium"
-            expectedDate="Q2 2024"
-            features={[
-              "Company information setup",
-              "Logo and branding customization",
-              "Currency and tax configuration",
-              "Date and time formats",
-              "Language and localization",
-              "Email template customization",
-              "Notification preferences",
-              "Default quotation settings",
-            ]}
-          />
-        );
+        return <GeneralSettings onNavigate={setActiveSection} />;
       case "settings-users":
-        return (
-          <ComingSoon
-            title="User Management"
-            description="Manage user accounts, roles, permissions, and access controls for your quotation management system."
-            category="Settings"
-            priority="high"
-            expectedDate="Q1 2024"
-            features={[
-              "User account management",
-              "Role-based access control",
-              "Permission management",
-              "Team organization",
-              "User activity monitoring",
-              "Password policies",
-              "Two-factor authentication",
-              "Single sign-on (SSO)",
-            ]}
-          />
-        );
+        return <UserManagement onNavigate={setActiveSection} />;
       case "settings-security":
-        return (
-          <ComingSoon
-            title="Security Settings"
-            description="Configure security policies, access controls, audit logs, and compliance settings to protect your business data."
-            category="Security"
-            priority="high"
-            expectedDate="Q1 2024"
-            features={[
-              "Security policies configuration",
-              "Access control settings",
-              "Audit log management",
-              "Data encryption settings",
-              "Backup and recovery",
-              "Compliance reporting",
-              "API security settings",
-              "Session management",
-            ]}
-          />
-        );
+        return <SecuritySettings onNavigate={setActiveSection} />;
       case "settings":
       case "settings-list":
+        return <SettingsDashboard onNavigate={setActiveSection} />;
+
+      // Footer Pages - Product
+      case "api-documentation":
+        return <ApiDocumentation onNavigate={setActiveSection} />;
+      case "mobile-apps":
+        return <MobileApps onNavigate={setActiveSection} />;
+      case "integrations":
+        return <Integrations onNavigate={setActiveSection} />;
+
+      // Footer Pages - Company
+      case "about-us":
+        return <AboutUs onNavigate={setActiveSection} />;
+      case "careers":
+        return <Careers onNavigate={setActiveSection} />;
+      case "press":
         return (
-          <ComingSoon
-            title="System Settings"
-            description="Comprehensive system configuration hub with access to all settings categories and system administration tools."
-            category="Settings"
-            priority="medium"
-            expectedDate="Q2 2024"
-            features={[
-              "Settings overview dashboard",
-              "Quick access to all settings",
-              "System health monitoring",
-              "Configuration backup",
-              "Settings search and navigation",
-              "Recent changes tracking",
-              "Settings templates",
-              "Bulk configuration tools",
-            ]}
-          />
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold text-gray-900">Press Releases</h1>
+            <p className="text-gray-600 mt-4">Coming Soon</p>
+          </div>
+        );
+      case "partners":
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold text-gray-900">Partners</h1>
+            <p className="text-gray-600 mt-4">Coming Soon</p>
+          </div>
+        );
+      case "contact":
+        return <Contact onNavigate={setActiveSection} />;
+
+      // Footer Pages - Resources
+      case "help-center":
+        return <HelpCenter onNavigate={setActiveSection} />;
+      case "user-guide":
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold text-gray-900">User Guide</h1>
+            <p className="text-gray-600 mt-4">Coming Soon</p>
+          </div>
+        );
+      case "webinars":
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold text-gray-900">Webinars</h1>
+            <p className="text-gray-600 mt-4">Coming Soon</p>
+          </div>
+        );
+      case "case-studies":
+        return <CaseStudies onNavigate={setActiveSection} />;
+      case "blog":
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold text-gray-900">Blog</h1>
+            <p className="text-gray-600 mt-4">Coming Soon</p>
+          </div>
+        );
+
+      // Footer Pages - Legal
+      case "privacy-policy":
+        return <PrivacyPolicy onNavigate={setActiveSection} />;
+      case "terms-of-service":
+        return <TermsOfService onNavigate={setActiveSection} />;
+      case "cookie-policy":
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold text-gray-900">Cookie Policy</h1>
+            <p className="text-gray-600 mt-4">Coming Soon</p>
+          </div>
+        );
+      case "gdpr-compliance":
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold text-gray-900">
+              GDPR Compliance
+            </h1>
+            <p className="text-gray-600 mt-4">Coming Soon</p>
+          </div>
+        );
+      case "security":
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold text-gray-900">Security</h1>
+            <p className="text-gray-600 mt-4">Coming Soon</p>
+          </div>
         );
 
       default:
@@ -390,21 +401,38 @@ function App() {
   };
 
   return (
-    <div
-      className="bg-gray-50"
-      style={{ minHeight: "150vh", overflowY: "scroll" }}
-    >
-      <Navbar
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-      />
-      <main className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <div className="mb-8 sm:mb-12 lg:mb-16" style={{ minHeight: "100vh" }}>
-          {renderContent()}
-        </div>
-      </main>
-      <Footer />
-    </div>
+    <HelmetProvider>
+      <SEO {...getSEOConfig()} />
+      <div
+        className="bg-gray-50"
+        style={{ minHeight: "150vh", overflowY: "scroll" }}
+      >
+        {activeSection !== "login" && (
+          <Navbar
+            activeSection={activeSection}
+            setActiveSection={setActiveSection}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+          />
+        )}
+
+        {activeSection === "login" ? (
+          renderContent()
+        ) : (
+          <>
+            <main className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+              <div
+                className="mb-8 sm:mb-12 lg:mb-16"
+                style={{ minHeight: "100vh" }}
+              >
+                {renderContent()}
+              </div>
+            </main>
+            <Footer onNavigate={setActiveSection} />
+          </>
+        )}
+      </div>
+    </HelmetProvider>
   );
 }
 

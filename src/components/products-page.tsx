@@ -9,6 +9,18 @@ interface ProductsPageProps {
 export const ProductsPage: React.FC<ProductsPageProps> = ({ onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    description: "",
+    price: "",
+    category: "",
+    sku: "",
+    inStock: true,
+  });
 
   const products = [
     {
@@ -91,6 +103,48 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onNavigate }) => {
     return matchesSearch && matchesCategory;
   });
 
+  const handleAddProduct = () => {
+    onNavigate?.("add-product");
+  };
+
+  const handleImportProducts = () => {
+    setShowImportModal(true);
+  };
+
+  const handleEditProduct = (product: any) => {
+    setSelectedProduct(product);
+    setNewProduct({
+      name: product.name,
+      description: product.description,
+      price: product.price.toString(),
+      category: product.category,
+      sku: product.sku || "",
+      inStock: product.inStock,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleAddToQuote = (product: any) => {
+    // Navigate to create quotation with pre-selected product
+    onNavigate?.(`quotations-create?product=${product.id}`);
+  };
+
+  const handleSaveProduct = () => {
+    // In a real app, this would save to the database
+    console.log("Saving product:", newProduct);
+    setShowAddModal(false);
+    setShowEditModal(false);
+    setNewProduct({
+      name: "",
+      description: "",
+      price: "",
+      category: "",
+      sku: "",
+      inStock: true,
+    });
+    alert("Product saved successfully!");
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -109,6 +163,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onNavigate }) => {
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={handleAddProduct}
             >
               <Icon icon="lucide:plus" />
               <span>Add Product</span>
@@ -117,6 +172,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onNavigate }) => {
               className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 flex items-center space-x-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={handleImportProducts}
             >
               <Icon icon="lucide:upload" />
               <span>Import</span>
@@ -211,6 +267,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onNavigate }) => {
                   className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => handleEditProduct(product)}
                 >
                   Edit Product
                 </motion.button>
@@ -218,6 +275,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onNavigate }) => {
                   className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => handleAddToQuote(product)}
                 >
                   Add to Quote
                 </motion.button>
@@ -251,6 +309,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onNavigate }) => {
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={handleAddProduct}
           >
             Add Product
           </motion.button>

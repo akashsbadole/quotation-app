@@ -9,6 +9,18 @@ interface ClientsPageProps {
 export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [newClient, setNewClient] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    address: "",
+    notes: "",
+  });
 
   const clients = [
     {
@@ -91,6 +103,55 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
       client.company.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleAddClient = () => {
+    onNavigate?.("add-client");
+  };
+
+  const handleImportClients = () => {
+    // Create a file input element
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,.xlsx,.xls";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        // Simulate CSV import
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const csvData = event.target?.result as string;
+          // Parse CSV and add clients
+          console.log("Importing CSV data:", csvData);
+          alert(
+            `Successfully imported clients from ${file.name}!\n\nIn a real application, this would parse the CSV file and add the clients to the database.`
+          );
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  };
+
+  const handleViewClient = (client: any) => {
+    setSelectedClient(client);
+    setShowViewModal(true);
+  };
+
+  const handleSaveClient = () => {
+    // In a real app, this would save to the database
+    console.log("Saving client:", newClient);
+    setShowAddModal(false);
+    setNewClient({
+      name: "",
+      email: "",
+      phone: "",
+      company: "",
+      address: "",
+      notes: "",
+    });
+    // Show success message
+    alert("Client added successfully!");
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -107,6 +168,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={handleAddClient}
             >
               <Icon icon="lucide:plus" />
               <span>Add Client</span>
@@ -115,6 +177,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
               className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 flex items-center space-x-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={handleImportClients}
             >
               <Icon icon="lucide:upload" />
               <span>Import</span>
@@ -237,6 +300,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
                   className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => handleViewClient(client)}
                 >
                   View Details
                 </motion.button>
@@ -331,6 +395,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
                           className="text-blue-600 hover:text-blue-900"
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
+                          onClick={() => handleViewClient(client)}
                         >
                           View
                         </motion.button>
@@ -368,9 +433,375 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={handleAddClient}
           >
             Add Client
           </motion.button>
+        </div>
+      )}
+
+      {/* Add Client Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Add New Client
+                </h2>
+                <motion.button
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowAddModal(false)}
+                >
+                  <Icon icon="lucide:x" className="text-xl" />
+                </motion.button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={newClient.name}
+                    onChange={(e) =>
+                      setNewClient((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter client name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={newClient.email}
+                    onChange={(e) =>
+                      setNewClient((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter email address"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={newClient.phone}
+                    onChange={(e) =>
+                      setNewClient((prev) => ({
+                        ...prev,
+                        phone: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Company
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={newClient.company}
+                    onChange={(e) =>
+                      setNewClient((prev) => ({
+                        ...prev,
+                        company: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter company name"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={3}
+                  value={newClient.address}
+                  onChange={(e) =>
+                    setNewClient((prev) => ({
+                      ...prev,
+                      address: e.target.value,
+                    }))
+                  }
+                  placeholder="Enter address"
+                />
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes
+                </label>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={3}
+                  value={newClient.notes}
+                  onChange={(e) =>
+                    setNewClient((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  placeholder="Enter any additional notes"
+                />
+              </div>
+
+              <div className="mt-8 flex justify-end space-x-3">
+                <motion.button
+                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowAddModal(false)}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleSaveClient}
+                  disabled={!newClient.name || !newClient.email}
+                >
+                  Add Client
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            className="bg-white rounded-lg shadow-xl max-w-lg w-full"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Import Clients
+                </h2>
+                <motion.button
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowImportModal(false)}
+                >
+                  <Icon icon="lucide:x" className="text-xl" />
+                </motion.button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <Icon
+                    icon="lucide:upload"
+                    className="mx-auto h-12 w-12 text-gray-400 mb-4"
+                  />
+                  <p className="text-lg font-medium text-gray-900 mb-2">
+                    Upload CSV File
+                  </p>
+                  <p className="text-gray-600 mb-4">
+                    Drag and drop your CSV file here, or click to browse
+                  </p>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    id="csv-upload"
+                  />
+                  <label
+                    htmlFor="csv-upload"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 cursor-pointer inline-block"
+                  >
+                    Choose File
+                  </label>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-900 mb-2">
+                    CSV Format Requirements:
+                  </h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• First row should contain headers</li>
+                    <li>• Required columns: Name, Email</li>
+                    <li>• Optional columns: Phone, Company, Address</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-end space-x-3">
+                <motion.button
+                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowImportModal(false)}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setShowImportModal(false);
+                    alert("Import functionality will be implemented here");
+                  }}
+                >
+                  Import Clients
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* View Client Modal */}
+      {showViewModal && selectedClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Client Details
+                </h2>
+                <motion.button
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowViewModal(false)}
+                >
+                  <Icon icon="lucide:x" className="text-xl" />
+                </motion.button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Client Name
+                    </label>
+                    <p className="text-lg text-gray-900">
+                      {selectedClient.name}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email
+                    </label>
+                    <p className="text-lg text-gray-900">
+                      {selectedClient.email}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone
+                    </label>
+                    <p className="text-lg text-gray-900">
+                      {selectedClient.phone}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Company
+                    </label>
+                    <p className="text-lg text-gray-900">
+                      {selectedClient.company}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Total Quotations
+                    </label>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {selectedClient.totalQuotations}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Total Value
+                    </label>
+                    <p className="text-2xl font-bold text-green-600">
+                      ${selectedClient.totalValue.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <span
+                      className={`inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(
+                        selectedClient.status
+                      )}`}
+                    >
+                      {selectedClient.status}
+                    </span>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Contact
+                    </label>
+                    <p className="text-lg text-gray-900">
+                      {selectedClient.lastContact}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-end space-x-3">
+                <motion.button
+                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowViewModal(false)}
+                >
+                  Close
+                </motion.button>
+                <motion.button
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setShowViewModal(false);
+                    onNavigate?.(`quotations-create-${selectedClient.id}`);
+                  }}
+                >
+                  Create Quotation
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>
