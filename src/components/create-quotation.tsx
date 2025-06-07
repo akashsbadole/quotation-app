@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
+import { useBusinessTracking } from "../hooks/useGoogleAnalytics";
 import { firebaseNotificationService } from "../services/firebase-notification.service";
 
 interface QuotationItem {
@@ -75,6 +76,9 @@ export const CreateQuotation: React.FC<CreateQuotationProps> = ({
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [existingQuotations, setExistingQuotations] = useState<any[]>([]);
+
+  // Google Analytics tracking
+  const { trackQuotationCreated, trackQuotationSent } = useBusinessTracking();
 
   // Mock data
   useEffect(() => {
@@ -309,6 +313,9 @@ export const CreateQuotation: React.FC<CreateQuotationProps> = ({
 
       console.log("Saving draft:", quotationToSave);
 
+      // Track quotation creation
+      trackQuotationCreated(quotationData.referenceNumber, calculateTotal());
+
       // In a real app, this would save to database
       localStorage.setItem(
         `quotation_draft_${quotationData.referenceNumber}`,
@@ -372,6 +379,9 @@ export const CreateQuotation: React.FC<CreateQuotationProps> = ({
       };
 
       console.log("Sending quotation:", quotationToSend);
+
+      // Track quotation sent
+      trackQuotationSent(quotationData.referenceNumber, calculateTotal());
 
       // In a real app, this would send via email and save to database
       localStorage.setItem(

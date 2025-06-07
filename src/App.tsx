@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { Navbar } from "./components/navbar";
 import { Footer } from "./components/footer";
@@ -48,6 +48,11 @@ import { PendingApprovals } from "./components/pending-approvals";
 import { CookiePolicy } from "./components/footer-pages/cookie-policy";
 import { GdprCompliance } from "./components/footer-pages/gdpr-compliance";
 import { Security } from "./components/footer-pages/security";
+import {
+  useGoogleAnalytics,
+  usePageTracking,
+} from "./hooks/useGoogleAnalytics";
+import { GoogleDriveIntegration } from "./components/google-drive-integration";
 import "./App.css";
 
 function App() {
@@ -55,6 +60,10 @@ function App() {
   const [navigationData, setNavigationData] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Initialize Google Analytics
+  const { trackPageView, trackUserInteraction, setUserProperties } =
+    useGoogleAnalytics();
 
   const handleLogin = (userData: any) => {
     setCurrentUser(userData);
@@ -184,6 +193,20 @@ function App() {
     }
   };
 
+  // Track page changes with Google Analytics
+  usePageTracking(activeSection, getSEOConfig().title);
+
+  // Track user properties when user changes
+  useEffect(() => {
+    if (currentUser) {
+      setUserProperties({
+        user_type: currentUser.plan || "free",
+        company_size: currentUser.companySize || "unknown",
+        user_id: currentUser.id,
+      });
+    }
+  }, [currentUser, setUserProperties]);
+
   const renderContent = () => {
     switch (activeSection) {
       case "login":
@@ -258,7 +281,9 @@ function App() {
 
       // Integrations
       case "integrations":
-        return <SystemIntegrations onNavigate={setActiveSection} />;
+        return <SystemIntegrations onNavigate={handleNavigation} />;
+      case "google-drive-integration":
+        return <GoogleDriveIntegration onNavigate={handleNavigation} />;
 
       // Footer Pages
       case "features":

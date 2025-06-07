@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
+import { GoogleDriveIntegration } from "./google-drive-integration";
 
 interface Integration {
   id: string;
@@ -272,7 +273,32 @@ export const SystemIntegrations: React.FC<SystemIntegrationsProps> = ({
   };
 
   const handleConnect = async (integration: Integration) => {
-    // Simulate connection process
+    // Special handling for Google Drive - navigate to dedicated page
+    if (integration.id === "googledrive") {
+      onNavigate?.("google-drive-integration");
+      return;
+    }
+
+    // Special handling for Google Analytics - show setup instructions
+    if (integration.id === "googleanalytics") {
+      alert(
+        "Google Analytics is already integrated! Check your dashboard for analytics data."
+      );
+      setIntegrations((prev) =>
+        prev.map((int) =>
+          int.id === integration.id
+            ? {
+                ...int,
+                status: "connected" as const,
+                lastSync: new Date().toISOString(),
+              }
+            : int
+        )
+      );
+      return;
+    }
+
+    // Simulate connection process for other integrations
     setIntegrations((prev) =>
       prev.map((int) =>
         int.id === integration.id ? { ...int, status: "pending" as const } : int
